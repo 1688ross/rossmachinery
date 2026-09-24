@@ -1,0 +1,36 @@
+# Secrets and local config
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Node (vendored assets only, no build pipeline expected)
+node_modules/
+
+# Databases, dumps, logs
+*.dump
+*.sql.gz
+*.log
+pgdata/
+
+# Real documents must never be committed. Synthetic fixtures are the only exception.
+*.pdf
+*.PDF
+*.tif
+*.tiff
+*.jpg
+*.jpeg
+*.png
+!fixtures/**/*.pdf
+!fixtures/**/*.png
+!fixtures/**/*.jpg
+!docs/**/*.png
