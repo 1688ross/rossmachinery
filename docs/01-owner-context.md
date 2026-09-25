@@ -67,3 +67,25 @@ efficient, easy to use, and functional.
 - "Similar companies" are aerospace / defense distributors and reps. Most of them will have the same
   CUI / ITAR constraints, so the sellable product is most likely a deployable bundle (their server or a
   government-eligible cloud) plus an optional hosted edition for customers without controlled data.
+
+## Update 2026-09-25: how the folders really work (from Ross)
+
+- There is a **digital set of folders on the shared Ross Machinery server** as well as the paper set. They were
+  meant to be identical; in practice either one can be the more current, and staff found pulling the paper
+  easier than searching the computer. The goal is to **retire the paper documents** (kept for reference) and
+  make the system the single copy.
+- A folder begins at the **RFQ**, not at the client's purchase order. Every RFQ is stored digitally under the
+  client until it is green-lit; a lost, cancelled or delayed bid stays under the client until it resurfaces.
+- Once green-lit, a project gets **its own dashboard** showing where it is: RFQ received, preparing quote,
+  quote sent, quote approved, green-lit, in production, testing, final testing, QC, packaging, ready to ship,
+  shipped, installed or delivered. Steps would be updated from emails, from documents, or by hand.
+- When one project has **several deliveries**, each item shipped is tracked separately.
+- **Three numbers are in use**: the client's RFQ or PO number, Ross Machinery's internal PO number, and the
+  vendor's order number. An RFQ may already carry a PO number. Details to follow.
+- The platform must track **every quote sent, every vendor invoice received and every client invoice sent,
+  all tied to QuickBooks** (probably Desktop; edition to confirm), so that vendors are paid, the company is
+  paid, commissions match, and any remaining balance is clearly flagged on the company-wide hub.
+- **Drawings and blueprints are the sensitive material and are not normally part of these order folders.**
+  Ross Machinery has access into customer facilities (Sikorsky, Air Force sites) but that is facility access,
+  not a security clearance; Sikorsky's "confidential" material is customer-proprietary, not classified.
+  Drawings stay outside the system.
