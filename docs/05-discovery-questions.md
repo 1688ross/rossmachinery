@@ -440,6 +440,24 @@ What changes: Which document kinds the intake screen offers and which steps they
 If unanswered we assume: Quote, client PO, vendor order confirmation, packing list and install report are the proof documents; other steps are manual.  
 Priority: Before Phase 2.
 
+**N8: Why folders end up out of balance.** Think of the last five folders that did not balance cleanly. What caused each one: a part shipped short, a substitution after payment, a vendor not charging for something, freight billed twice, a rounding or currency difference? How was each resolved, and where was that written down?  
+Why it matters: The platform should name the cause in plain words and offer the right fix; the real causes decide the list it starts with.  
+What changes: The discrepancy categories and the resolution actions (credit, adjustment, set aside for the client, write off).  
+If unanswered we assume: Short shipment, substitution, vendor did not charge, vendor over-billed, freight difference, other with a note.  
+Priority: Before build.
+
+**N9: Money held or set aside.** When the company is holding money for a client, or owes a client a make-good from an earlier order, where is that written today: the folder, a spreadsheet, QuickBooks, someone's memory? Roughly how many such balances exist right now and how old is the oldest? Does anyone owe the company the same way?  
+Why it matters: These balances have to survive the cutover and be visible at year-end; if they live only in memory, the first job is to write them down.  
+What changes: Whether client credits are imported at cutover with opening balances, and whether vendor-side credits are needed too.  
+If unanswered we assume: Client credits are imported at cutover from the office's list; vendor credits handled as ledger credit memos.  
+Priority: Before build.
+
+**N10: The client-year list.** Could I see the layout of the per-client, per-year spreadsheet, with made-up numbers? Which columns does your father actually look at, and which questions send him to the paper folder?  
+Why it matters: That spreadsheet is the hub the platform replaces, and the questions that send him to the paper are the ones the screen must answer first.  
+What changes: The columns and grouping of the client-year view and what the folder screen shows at the top.  
+If unanswered we assume: Per client per year: ready to close, waiting on client payment, vendor to be paid, waiting on invoices, money held or set aside.  
+Priority: Before build.
+
 ## Printable checklist
 
 Tick each line when you have an answer or a "don't know". Group headings match the full list.

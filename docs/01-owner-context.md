@@ -89,3 +89,30 @@ efficient, easy to use, and functional.
   Ross Machinery has access into customer facilities (Sikorsky, Air Force sites) but that is facility access,
   not a security clearance; Sikorsky's "confidential" material is customer-proprietary, not classified.
   Drawings stay outside the system.
+
+## Update 2026-09-26: discrepancies, held money and the client-year view (from Ross)
+
+- When the checks and balances do not align, the platform should **explain why**, help resolve it, and keep a
+  record that the folder was unbalanced and how it was resolved. Examples: an item shipped without a part and
+  the difference was fixed later; the client wanted a dearer item, took a cheaper one after paying, and said in
+  an email "make it up to me next time."
+- **Money must be tracked even when a folder is closed before everything is reconciled.** Cases: the client
+  has paid but the vendor has not yet been paid (the company is holding a balance); the client paid for
+  everything, a small item was dropped, the vendor never charged and is not asking to be reimbursed, so the
+  surplus is set aside for that client in the future.
+- Seeing a discrepancy should **trigger a reminder of related conversations**: at first entered by hand, later
+  found in email ("just add it to the next invoice", "get me back next time").
+- There is a **master spreadsheet or dashboard per client per year** listing that client's POs: ready to be
+  closed, waiting on payment from the client, needing a vendor payment, waiting on invoices. The platform
+  replaces it.
+- **The platform must not look like spreadsheets.** It should anticipate the user's need and show the
+  information before they start looking. The reason: the owner walks across the office to pull the paper
+  folder because it is faster than the computer, which requires two identical sets of folders; when they
+  differ a whole reconciliation project appears and bottlenecks the office. That is what they are dealing
+  with now, at their September year-end.
+
+Design consequences noted for the follow-up migration and plan: client-level credits ("money set aside for
+this client from PO-123, per the email of ..."), a discrepancy record (cause, amount, resolution, linked note
+or email), closing allowed when every balance is zero or moved to a tracked place, "holding a balance" and
+"set aside" surfaced on the folder, the hub and the client-year view, and an "anticipate the need" rule that
+every screen is reviewed against.
