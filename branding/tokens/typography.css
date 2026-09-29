@@ -1,0 +1,48 @@
+/* ============================================================
+   Ross Machinery — Typography Tokens
+   ============================================================ */
+
+:root {
+  /* Families */
+  --font-display: 'Saira Condensed', 'Arial Narrow', sans-serif;
+  --font-body:    'Barlow', system-ui, -apple-system, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Weights */
+  --fw-regular:  400; /* @kind other */
+  --fw-medium:   500; /* @kind other */
+  --fw-semibold: 600; /* @kind other */
+  --fw-bold:     700; /* @kind other */
+  --fw-extra:    800; /* @kind other */
+
+  /* Display scale (Saira Condensed) — for hero & section heads */
+  --type-display-xl: 800 5.5rem/0.95 var(--font-display);   /* 88px */
+  --type-display-lg: 800 4rem/0.98 var(--font-display);     /* 64px */
+  --type-display-md: 700 3rem/1.0 var(--font-display);      /* 48px */
+  --type-display-sm: 700 2.25rem/1.05 var(--font-display);  /* 36px */
+
+  /* Heading scale (Barlow) — for cards, UI, subheads */
+  --type-h1: 700 2rem/1.15 var(--font-body);      /* 32px */
+  --type-h2: 700 1.5rem/1.2 var(--font-body);     /* 24px */
+  --type-h3: 600 1.25rem/1.3 var(--font-body);    /* 20px */
+  --type-h4: 600 1.0625rem/1.35 var(--font-body); /* 17px */
+
+  /* Body scale (Barlow) */
+  --type-body-lg: 400 1.125rem/1.6 var(--font-body); /* 18px */
+  --type-body:    400 1rem/1.6 var(--font-body);     /* 16px */
+  --type-body-sm: 400 0.875rem/1.55 var(--font-body);/* 14px */
+  --type-caption: 500 0.75rem/1.4 var(--font-body);  /* 12px */
+
+  /* Mono — specs / part numbers */
+  --type-mono:    500 0.875rem/1.5 var(--font-mono);
+
+  /* Eyebrow / label — uppercase tracked */
+  --type-eyebrow: 600 0.8125rem/1.2 var(--font-body);
+
+  /* Letter spacing */
+  --tracking-display: -0.01em; /* @kind other */
+  --tracking-tight:   -0.01em; /* @kind other */
+  --tracking-normal:  0; /* @kind other */
+  --tracking-wide:    0.08em; /* @kind other */
+  --tracking-eyebrow: 0.14em; /* @kind other */
+}

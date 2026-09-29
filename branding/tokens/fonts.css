@@ -1,0 +1,13 @@
+/* ============================================================
+   Ross Machinery — Fonts
+   Display: Saira Condensed (substitute for the logo's "Rift")
+   Body:    Barlow
+   Mono:    IBM Plex Mono (technical specs, part numbers)
+   ------------------------------------------------------------
+   NOTE: The logo wordmark is set in Rift (Adobe Fonts), which is
+   not free-webfont licensable. Saira Condensed is the closest
+   open match (athletic, semi-condensed industrial grotesque).
+   Swap in licensed Rift webfonts for production if available.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700;1,800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');

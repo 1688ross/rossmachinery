@@ -1,0 +1,90 @@
+/* ============================================================
+   Ross Machinery — Color Tokens
+   Grounded in the logo: navy + steel blue + safety yellow.
+   ============================================================ */
+
+:root {
+  /* ---- Brand: Navy (primary) ---- */
+  --rms-navy-950: #001a33;
+  --rms-navy-900: #002647;
+  --rms-navy:     #003363; /* core brand navy — logo wedge */
+  --rms-navy-700: #0a447c;
+  --rms-navy-600: #14528f;
+
+  /* ---- Brand: Steel Blue (secondary) ---- */
+  --rms-blue-700: #1d619e;
+  --rms-blue:     #2576bc; /* core brand blue — logo chevron */
+  --rms-blue-400: #5b9cd6;
+  --rms-blue-200: #b6d3ec;
+  --rms-blue-100: #dcebf7;
+
+  /* ---- Brand: Safety Yellow (accent) ---- */
+  --rms-yellow-700: #c6900f;
+  --rms-yellow-600: #e0a015;
+  --rms-yellow:     #fbb51c; /* core brand yellow — logo bar */
+  --rms-yellow-300: #fdd277;
+  --rms-yellow-100: #fef0cf;
+
+  /* ---- Neutrals: cool industrial steel ---- */
+  --steel-950: #0f141b;
+  --steel-900: #1a2029;
+  --steel-800: #28303b;
+  --steel-700: #3c4654;
+  --steel-600: #515d6b;
+  --steel-500: #6e7b8c;
+  --steel-400: #9aa6b5;
+  --steel-300: #c2cbd6;
+  --steel-200: #dce2ea;
+  --steel-100: #eceff4;
+  --steel-50:  #f5f7fa;
+  --white:     #ffffff;
+
+  /* ---- Semantic status ---- */
+  --status-success: #2e7d52;
+  --status-warning: #e0a015;
+  --status-danger:  #c2392b;
+  --status-info:    #2576bc;
+
+  /* ============================================================
+     Semantic aliases — use these in components
+     ============================================================ */
+
+  /* Surfaces */
+  --surface-page:    var(--steel-50);
+  --surface-card:    var(--white);
+  --surface-sunken:  var(--steel-100);
+  --surface-inverse: var(--rms-navy);
+  --surface-inverse-2: var(--rms-navy-900);
+
+  /* Text */
+  --text-strong:   var(--rms-navy);
+  --text-body:     var(--steel-700);
+  --text-muted:    var(--steel-500);
+  --text-inverse:  var(--white);
+  --text-on-accent: var(--rms-navy);
+  --text-link:     var(--rms-blue);
+
+  /* Borders & lines */
+  --border-subtle: var(--steel-200);
+  --border-default: var(--steel-300);
+  --border-strong: var(--rms-navy);
+  --divider:       var(--steel-200);
+
+  /* Interactive — primary (navy) */
+  --action-primary:        var(--rms-navy);
+  --action-primary-hover:  var(--rms-navy-700);
+  --action-primary-text:   var(--white);
+
+  /* Interactive — secondary (blue) */
+  --action-secondary:       var(--rms-blue);
+  --action-secondary-hover: var(--rms-blue-700);
+  --action-secondary-text:  var(--white);
+
+  /* Interactive — accent (yellow) */
+  --action-accent:        var(--rms-yellow);
+  --action-accent-hover:  var(--rms-yellow-600);
+  --action-accent-text:   var(--rms-navy);
+
+  /* Focus ring */
+  --focus-ring: var(--rms-blue);
+}

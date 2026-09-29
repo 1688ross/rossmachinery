@@ -1,0 +1,23 @@
+<!-- @dsCard group="Colors" viewport="700x140" name="Semantic — Status" subtitle="Success, warning, danger, info." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--surface-card); padding: 18px; box-sizing: border-box; }
+  .row { display: flex; gap: 14px; }
+  .sw { flex: 1; height: 104px; border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; box-sizing: border-box; color: #fff; }
+  .sw .name { font-weight: 700; font-size: 14px; }
+  .sw .hex { font-family: var(--font-mono); font-size: 11px; opacity: 0.9; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw" style="background:var(--status-success)"><span class="name">Success</span><span class="hex">#2E7D52</span></div>
+    <div class="sw" style="background:var(--status-warning); color:var(--rms-navy)"><span class="name">Warning</span><span class="hex">#E0A015</span></div>
+    <div class="sw" style="background:var(--status-danger)"><span class="name">Danger</span><span class="hex">#C2392B</span></div>
+    <div class="sw" style="background:var(--status-info)"><span class="name">Info</span><span class="hex">#2576BC</span></div>
+  </div>
+</body>
+</html>

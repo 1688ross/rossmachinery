@@ -1,0 +1,92 @@
+<!-- @dsCard group="Components" viewport="700x620" name="Core — Buttons, Badges, Cards, Inputs, Specs" subtitle="The reusable primitives, in their key states." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--steel-50); padding: 24px; box-sizing: border-box; color: var(--text-body); }
+  .group { margin-bottom: 22px; }
+  .glabel { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 10px; }
+  .rowflex { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .panel { background: #fff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Button, Badge, Card, Input, Eyebrow, SpecList } = window.RossMachineryDesignSystem_610e0e;
+    const Arrow = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+
+    function Demo() {
+      return (
+        <div>
+          <div className="group">
+            <p className="glabel">Buttons — variants</p>
+            <div className="rowflex">
+              <Button variant="primary">Primary</Button>
+              <Button variant="secondary">Secondary</Button>
+              <Button variant="accent" iconRight={<Arrow/>}>Request a Quote</Button>
+              <Button variant="outline">Outline</Button>
+              <Button variant="ghost">Ghost</Button>
+              <Button variant="primary" disabled>Disabled</Button>
+            </div>
+          </div>
+
+          <div className="group">
+            <p className="glabel">Buttons — sizes</p>
+            <div className="rowflex">
+              <Button size="sm" variant="secondary">Small</Button>
+              <Button size="md" variant="secondary">Medium</Button>
+              <Button size="lg" variant="secondary">Large</Button>
+            </div>
+          </div>
+
+          <div className="group">
+            <p className="glabel">Badges</p>
+            <div className="rowflex">
+              <Badge tone="blue">Soft</Badge>
+              <Badge tone="navy" variant="solid">Navy</Badge>
+              <Badge tone="yellow" variant="solid">5 Axis</Badge>
+              <Badge tone="success" variant="soft">In Stock</Badge>
+              <Badge tone="danger" variant="soft">Lead Time</Badge>
+              <Badge tone="neutral" variant="outline">Outline</Badge>
+            </div>
+          </div>
+
+          <div className="group">
+            <p className="glabel">Card + Eyebrow + SpecList</p>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px'}}>
+              <Card accentEdge interactive>
+                <Eyebrow>High Precision</Eyebrow>
+                <h3 style={{font:'var(--type-h3)', color:'var(--rms-navy)', margin:'10px 0 6px'}}>Mitsui Seiki HPX150</h3>
+                <p style={{font:'var(--type-body-sm)', margin:0}}>5-axis horizontal machining center with a 5-year accuracy guarantee.</p>
+              </Card>
+              <Card>
+                <SpecList items={[
+                  { label: 'X/Y/Z Travel', value: '1500×1300×1400' },
+                  { label: 'Spindle', value: '50T · 12k rpm' },
+                  { label: 'Accuracy', value: '±0.003 mm' },
+                ]} />
+              </Card>
+            </div>
+          </div>
+
+          <div className="group">
+            <p className="glabel">Inputs</p>
+            <div className="panel" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px'}}>
+              <Input label="Company" placeholder="Acme Aerospace" required />
+              <Input label="Email" type="email" placeholder="you@company.com" error="Enter a valid email." />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body>
+</html>

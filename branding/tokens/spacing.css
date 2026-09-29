@@ -1,0 +1,56 @@
+/* ============================================================
+   Ross Machinery — Spacing, Radius, Shadow, Border, Motion
+   ============================================================ */
+
+:root {
+  /* Spacing scale (4px base) */
+  --space-0:  0;
+  --space-1:  0.25rem;  /* 4 */
+  --space-2:  0.5rem;   /* 8 */
+  --space-3:  0.75rem;  /* 12 */
+  --space-4:  1rem;     /* 16 */
+  --space-5:  1.5rem;   /* 24 */
+  --space-6:  2rem;     /* 32 */
+  --space-7:  3rem;     /* 48 */
+  --space-8:  4rem;     /* 64 */
+  --space-9:  6rem;     /* 96 */
+  --space-10: 8rem;     /* 128 */
+
+  /* Radius — restrained, mechanical. Brand leans square. */
+  --radius-none: 0;
+  --radius-sm:   2px;
+  --radius-md:   4px;   /* default for cards, inputs, buttons */
+  --radius-lg:   8px;
+  --radius-pill: 999px; /* badges / chips only */
+
+  /* Borders */
+  --border-width: 1px; /* @kind other */
+  --border-width-strong: 2px; /* @kind other */
+
+  /* Shadows — cool-tinted, subtle. Industrial, not floaty. */
+  --shadow-xs: 0 1px 2px rgba(15, 20, 27, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 20, 27, 0.08), 0 1px 2px rgba(15, 20, 27, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 20, 27, 0.10);
+  --shadow-lg: 0 12px 28px rgba(15, 20, 27, 0.14);
+  --shadow-card-hover: 0 16px 36px rgba(0, 51, 99, 0.16);
+
+  /* Accent edge — the signature yellow keyline */
+  --edge-accent: 3px solid var(--rms-yellow);
+
+  /* Containers */
+  --container-max: 1200px;
+  --container-pad: 1.5rem;
+
+  /* Motion — purposeful, mechanical. No bounce. */
+  --ease-standard: cubic-bezier(0.2, 0, 0.1, 1); /* @kind other */
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --dur-fast:   140ms; /* @kind other */
+  --dur-base:   220ms; /* @kind other */
+  --dur-slow:   400ms; /* @kind other */
+
+  /* Z-index */
+  --z-header: 50; /* @kind other */
+  --z-overlay: 100; /* @kind other */
+  --z-modal: 110; /* @kind other */
+  --z-toast: 120; /* @kind other */
+}

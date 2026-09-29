@@ -1,0 +1,22 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Elevation" subtitle="Cool-tinted shadows + the signature yellow keyline." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--steel-50); padding: 26px 22px; box-sizing: border-box; display: flex; gap: 22px; align-items: center; }
+  .item { text-align: center; }
+  .box { width: 110px; height: 74px; background: #fff; border-radius: var(--radius-md); }
+  .name { font-family: var(--font-mono); font-size: 11px; color: var(--text-body); margin-top: 12px; }
+  .edge { border-top: var(--edge-accent); }
+</style>
+</head>
+<body>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-xs)"></div><div class="name">xs</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-sm)"></div><div class="name">sm</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-md)"></div><div class="name">md</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-lg)"></div><div class="name">lg</div></div>
+  <div class="item"><div class="box edge" style="box-shadow:var(--shadow-md)"></div><div class="name">edge-accent</div></div>
+</body>
+</html>
