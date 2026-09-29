@@ -24,7 +24,7 @@ red-team round (41 attacks, two low-severity leaks found and fixed). The Phase 1
 | `docs/02-brief-critique.md` | What the brief got right, what is missing, risky or over-scoped, corrected facts, and the first version in one paragraph. |
 | `docs/03-data-model-and-rls.md` | The database design explained in folder terms: the ledger, closing a folder, roles, export control, tenant isolation, how it was tested and attacked. |
 | `docs/04-cloud-vs-onprem.md` | The decision on the on-prem ("sovereign") and cloud profiles, the stack, the AI policy by marking, compliance split, air-gapped mode. |
-| `docs/05-discovery-questions.md` | The questions to take to the office, with why each matters and the default we build under if unanswered. |
+| `docs/05-before-we-start.md` | The five things to know before starting, and the rule that everything else is learned by using the screens. (The long question list is kept as an appendix.) |
 | `docs/06-phase1-plan.md` | The Phase 1 plan: definition of done, decision gates, 58 small tasks, week-by-week shape, risks. |
 | `schema/README.md` | Technical reference for the schema: apply and test, the session-context contract, roles, export-control gating, adding a table safely. |
 

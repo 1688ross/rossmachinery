@@ -63,6 +63,11 @@ Phase 1 is done when every line is true:
 
 ## 3. Sequencing and the decision gates
 
+**Revised 2026-09-29.** The gates below no longer block anything. Every "default if unanswered" is a starting
+point the build proceeds with, changeable once the office has used the screens. The only things that must be
+known before starting are the five in `05-before-we-start.md`. Question numbers refer to the appendix list,
+kept for reference only.
+
 Discovery runs in week 1 alongside the scaffold: nothing in workstream B, C1 to C4 or D1 depends on an office answer, so week 1 builds the repository, compose file, CI and login while Ross takes the questions to the office. Answers land in the decision log (A3). On its gate date each gate is marked resolved or defaulted; after that we build under the default, and a late answer that contradicts it becomes a change request with its own task.
 
 Question numbers refer to `05-discovery-questions.md`.
