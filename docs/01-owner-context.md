@@ -116,3 +116,16 @@ this client from PO-123, per the email of ..."), a discrepancy record (cause, am
 or email), closing allowed when every balance is zero or moved to a tracked place, "holding a balance" and
 "set aside" surfaced on the folder, the hub and the client-year view, and an "anticipate the need" rule that
 every screen is reviewed against.
+
+## Update 2026-09-29: numbers, and the build principle
+
+- Sample PO numbers from the folder stack are ten digits starting 4500 (for example 4500681222). That is the
+  standard purchase-order number format issued by SAP, the purchasing system large manufacturers run, so these
+  are almost certainly Sikorsky's numbers with no date or customer code inside. The tab number is the client's
+  number and it is what the office searches by. Rule: any number is a searchable label; the system never
+  insists on a format and does not generate its own number unless the office asks for one.
+- Build principle, agreed with Ross: fix only the foundations (folder as record, money as a list of events with
+  computed balances, the pile on the first screen, on-prem with second-factor logins, nothing ever deleted).
+  Everything else is a setting or a screen, learned by putting real folders in front of the office and
+  adjusting. Less about how the whole company runs; more about being flexible enough to record whatever
+  happens.
