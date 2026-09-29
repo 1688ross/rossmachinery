@@ -26,6 +26,7 @@ red-team round (41 attacks, two low-severity leaks found and fixed). The Phase 1
 | `docs/04-cloud-vs-onprem.md` | The decision on the on-prem ("sovereign") and cloud profiles, the stack, the AI policy by marking, compliance split, air-gapped mode. |
 | `docs/05-before-we-start.md` | The five things to know before starting, and the rule that everything else is learned by using the screens. (The long question list is kept as an appendix.) |
 | `docs/06-phase1-plan.md` | The Phase 1 plan: definition of done, decision gates, 58 small tasks, week-by-week shape, risks. |
+| `docs/07-control-panel-spec.md` | The screens: the control panel with green, yellow and red lights, what clicking a light shows, and the top of a PO page. |
 | `schema/README.md` | Technical reference for the schema: apply and test, the session-context contract, roles, export-control gating, adding a table safely. |
 
 ## Schema quick start
