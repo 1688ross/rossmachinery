@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Control panel{% endblock %} · Ross Machinery Sales</title>
+<link rel="icon" href="/static/assets/logos/rms-mark.svg">
+<link rel="stylesheet" href="/static/tokens/colors.css">
+<link rel="stylesheet" href="/static/tokens/typography.css">
+<link rel="stylesheet" href="/static/tokens/spacing.css">
+<link rel="stylesheet" href="/static/core/app.css">
+</head>
+<body>
+{% block body %}
+<header class="topbar">
+  <a class="brand" href="/"><img src="/static/assets/logos/rms-logo-white.png" alt="Ross Machinery Sales"></a>
+  <nav class="topnav">
+    <a href="/?show=open" class="{% if show == 'open' %}active{% endif %}">Open folders</a>
+    <a href="/?show=closed" class="{% if show == 'closed' %}active{% endif %}">Closed</a>
+  </nav>
+  <div class="topbar-right">
+    <span class="mono muted">{{ PO_PROFILE }}</span>
+    <span>{{ user.get_username }}</span>
+    <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="btn btn-ghost">Sign out</button></form>
+  </div>
+</header>
+<main class="page">{% block content %}{% endblock %}</main>
+{% endblock %}
+</body>
+</html>

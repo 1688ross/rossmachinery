@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+{% block title %}Control panel{% endblock %}
+{% block content %}
+<div class="panel-head">
+  <div>
+    <p class="eyebrow">All systems</p>
+    <h1 class="display">{% if show == 'open' %}Open folders{% else %}Closed folders{% endif %}</h1>
+  </div>
+  <div class="summary">
+    <span class="pill pill-red">{{ counts.red|default:0 }} need a call</span>
+    <span class="pill pill-yellow">{{ counts.yellow|default:0 }} to look at</span>
+    <span class="pill pill-green">{{ counts.green|default:0 }} clean</span>
+    <span class="pill pill-grey">{{ counts.grey|default:0 }} in progress</span>
+  </div>
+</div>
+
+<section class="board">
+  {% for r in rows %}
+  <a class="row row-{{ r.v.overall }}" href="{% url 'po_detail' r.f.po_id %}">
+    <span class="beacon beacon-{{ r.v.overall }}" aria-label="{{ r.v.overall }}"></span>
+    <span class="who">
+      <span class="po mono">{{ r.f.client_order_number|default:r.f.po_number }}</span>
+      <span class="client">{{ r.f.client_name }}</span>
+      <span class="title">{{ r.f.title }}</span>
+    </span>
+    <span class="lights">
+      {% for l in r.v.lights %}
+      <span class="light light-{{ l.state }}" title="{{ l.label }}{% if l.note %}: {{ l.note }}{% endif %}">
+        <span class="dot"></span><span class="lbl">{{ l.label }}</span>
+      </span>
+      {% endfor %}
+    </span>
+    <span class="why">
+      {% if r.v.reasons %}{{ r.v.reasons.0.1 }}{% else %}<span class="muted">Nothing needs attention.</span>{% endif %}
+    </span>
+  </a>
+  {% empty %}
+  <p class="muted">No folders here.</p>
+  {% endfor %}
+</section>
+{% endblock %}

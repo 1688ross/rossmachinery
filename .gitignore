@@ -34,3 +34,10 @@ pgdata/
 !fixtures/**/*.png
 !fixtures/**/*.jpg
 !docs/**/*.png
+
+# The design system's own assets are allowed (brand logos, guideline images).
+!branding/**
+# Django
+staticfiles/
+db.sqlite3
+*.pyc

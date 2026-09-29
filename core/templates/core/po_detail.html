@@ -1,0 +1,77 @@
+{% extends "core/base.html" %}{% load money %}
+{% block title %}{{ f.client_order_number|default:f.po_number }}{% endblock %}
+{% block content %}
+<a class="back" href="/">&larr; All folders</a>
+<div class="po-head">
+  <div>
+    <p class="eyebrow">{{ f.client_name }} · {{ f.po_number }} · opened {{ f.opened_at|date:"M j, Y" }}</p>
+    <h1 class="display">{{ f.client_order_number|default:f.po_number }} <span class="title-sub">{{ f.title }}</span></h1>
+  </div>
+  <span class="beacon beacon-{{ v.overall }} beacon-lg"></span>
+</div>
+
+{% if v.reasons %}
+<section class="reasons reasons-{{ v.overall }}">
+  {% for state, text in v.reasons %}
+  <p class="reason reason-{{ state }}"><span class="dot"></span>{{ text }}</p>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="topsheet">
+  <div class="sheet-col">
+    <p class="eyebrow">Customer · {{ f.client_name }}</p>
+    <div class="big mono">{{ f.billed_to_client|money }}</div>
+    <div class="kv"><span>Collected</span><span class="mono">{{ f.received_from_client|money }}</span></div>
+    <div class="kv {% if f.open_client_balance > 0 %}kv-open{% endif %}"><span>Balance</span><span class="mono">{{ f.open_client_balance|money }}</span></div>
+    <table class="ledger">
+      {% for e in client_entries %}
+      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="sheet-col">
+    <p class="eyebrow">Supplier · {{ f.vendor_name }}</p>
+    <div class="big mono">{{ f.billed_by_vendors|money }}</div>
+    <div class="kv"><span>Paid</span><span class="mono">{{ f.paid_to_vendors|money }}</span></div>
+    <div class="kv {% if f.open_vendor_balance > 0 %}kv-open{% endif %}"><span>Balance</span><span class="mono">{{ f.open_vendor_balance|money }}</span></div>
+    <table class="ledger">
+      {% for e in vendor_entries %}
+      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="sheet-col sheet-col-narrow">
+    <p class="eyebrow">Commission</p>
+    <div class="big mono {% if f.gross_margin < 0 %}neg{% endif %}">{{ f.gross_margin|money }}</div>
+    <div class="kv"><span>Freight</span><span class="mono">{{ f.freight|money }}</span></div>
+    <div class="kv"><span>Status</span><span>{{ f.status|cut:"_"|capfirst }}</span></div>
+    <div class="kv"><span>Ready to close</span><span>{{ f.ready_to_close|yesno:"Yes,Not yet" }}</span></div>
+  </div>
+</section>
+
+<section class="lights lights-detail">
+  {% for l in v.lights %}
+  <span class="light light-{{ l.state }}"><span class="dot"></span><span class="lbl">{{ l.label }}</span>{% if l.note %}<span class="note mono">{{ l.note }}</span>{% endif %}</span>
+  {% endfor %}
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Line items</h2>
+    <table class="table">
+      {% for l in lines %}<tr><td class="mono">{{ l.line_no|stringformat:"05d" }}</td><td>{{ l.description }} <span class="muted">({{ l.category }})</span></td><td class="mono amt">{{ l.quantity|floatformat:0 }} × {{ l.unit_price|signed }}</td><td class="mono amt">{{ l.extended_amount|signed }}</td></tr>{% empty %}<tr><td class="muted">No line items yet.</td></tr>{% endfor %}
+    </table>
+  </section>
+  <section class="card">
+    <h2>Notes</h2>
+    {% for n in notes %}
+    <div class="sticky {% if n.resolved_at %}resolved{% endif %}"><span class="mono muted">{{ n.created_at|date:"m/d/y" }}</span> {{ n.body }}{% if n.resolved_at %} <span class="muted">· resolved</span>{% endif %}</div>
+    {% empty %}<p class="muted">No notes.</p>{% endfor %}
+    <h2 class="mt">Close-out checklist</h2>
+    <ul class="checklist">
+      {% for c in checklist %}<li class="{% if c.completed_at %}done{% endif %}">{{ c.label }}{% if c.is_required %} <span class="muted">(required)</span>{% endif %}</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}
