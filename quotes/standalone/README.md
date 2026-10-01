@@ -1,5 +1,7 @@
 # Standalone quote generator (browser-only)
 
+Published (private, shared from its Share menu): https://claude.ai/artifact/4Dxp2g9uXsH3p5kPT1jE1a
+
 The office's quote form as a single page that runs entirely in the browser: fill in the form,
 watch the Letter-size preview, and download a vector PDF built client-side with pdfmake using
 the brand fonts (Barlow, IBM Plex Mono, Saira Condensed) embedded from `fonts/rms-fonts.js`.
