@@ -129,3 +129,9 @@ every screen is reviewed against.
   Everything else is a setting or a screen, learned by putting real folders in front of the office and
   adjusting. Less about how the whole company runs; more about being flexible enough to record whatever
   happens.
+
+## Update 2026-10-01
+
+- **QuickBooks Desktop**, confirmed. Edition and year still to read off the start screen.
+- **Tammie closes the folders.** She is the sign-off on the close-out step. In the schema that is the
+  manager role (close needs manager or above), which is how she is seeded.
