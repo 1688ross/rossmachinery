@@ -4,37 +4,38 @@
 <link rel="stylesheet" href="{{ base }}static/tokens/typography.css">
 <link rel="stylesheet" href="{{ base }}static/tokens/spacing.css">
 <style>
-@page { size: Letter; margin: 0.75in 0.8in 0.8in; }
+@page { size: Letter; margin: 0.7in 0.8in 0.45in; }
 html,body{margin:0;background:#fff}
 body{font-family:var(--font-body);color:var(--steel-800);font-size:11pt;line-height:1.45;margin:0;padding:0}
-@media screen { body{padding:0.75in 0.8in 0.8in;max-width:6.9in;margin:0 auto} }
+@media screen { body{padding:0.7in 0.8in 0.35in;max-width:6.9in;margin:0 auto;min-height:9.95in;display:flex;flex-direction:column} .foot{margin-top:auto} }
 @media print { body{padding:0} .foot{position:fixed;bottom:0;left:0;right:0} }
-.lh{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid var(--rms-yellow);padding-bottom:12px;margin-bottom:28px}
-.lh img{height:52px}
-.lh .co{text-align:right;font-size:9pt;color:var(--steel-600);line-height:1.5}
-.lh .co strong{display:block;color:var(--rms-navy);font-family:var(--font-display);text-transform:uppercase;font-style:italic;font-size:12pt;letter-spacing:.02em}
-.meta{display:flex;justify-content:space-between;gap:24px;margin-bottom:22px}
+.lh{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--rms-yellow);padding-bottom:16px;margin-bottom:34px}
+.lh img{height:78px}
+.lh .co{text-align:right;font-size:9.5pt;color:var(--steel-600);line-height:1.6}
+.meta{display:flex;justify-content:space-between;gap:24px;margin-bottom:30px}
 .meta .to{white-space:pre-line}
 .meta .ref{text-align:right;font-size:10pt}
 .meta .ref .big{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy);font-weight:600}
 .meta .ref div{margin-bottom:2px}
 .eyebrow{font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--steel-500);font-weight:600}
 .eyebrow::before{content:"";display:inline-block;width:10px;height:3px;background:var(--rms-yellow);margin-right:6px;vertical-align:middle}
-h1{font-family:var(--font-display);font-style:italic;text-transform:uppercase;color:var(--rms-navy);font-size:20pt;margin:0 0 6px;line-height:1.05}
-p{margin:0 0 10px}
-table.items{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:10.5pt}
+.subject{font-weight:700;color:var(--rms-navy);font-size:11.5pt;margin:0 0 14px}
+.subject span{color:var(--steel-500);font-weight:600;margin-right:6px}
+p{margin:0 0 12px}
+table.items{width:100%;border-collapse:collapse;margin:20px 0 6px;font-size:10.5pt}
 table.items th{text-align:left;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--steel-500);border-bottom:2px solid var(--rms-navy);padding:4px 6px}
 table.items td{padding:8px 6px;border-bottom:1px solid var(--steel-200);vertical-align:top}
 table.items .n{text-align:right;white-space:nowrap;font-family:var(--font-mono)}
 table.items .item{font-family:var(--font-mono);color:var(--steel-600)}
 table.items .details{color:var(--steel-600);font-size:9.5pt;margin-top:4px}
 table.items .details div{margin:1px 0}
-.total{display:flex;justify-content:flex-end;gap:24px;align-items:baseline;padding:8px 6px 0;font-weight:600}
+.total{display:flex;justify-content:flex-end;gap:24px;align-items:baseline;padding:10px 6px 0;font-weight:600}
 .total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy)}
-.terms{margin:18px 0 20px;display:grid;grid-template-columns:auto 1fr;gap:3px 18px;font-size:10pt;background:var(--steel-50);padding:10px 14px;border-left:3px solid var(--rms-yellow)}
-.terms dt{color:var(--steel-500);font-weight:600}
-.terms dd{margin:0}
-.sig{margin-top:26px}
+.terms{margin:26px 0 28px;display:flex;gap:14px}
+.tbox{flex:1;background:var(--steel-50);border-left:3px solid var(--rms-yellow);padding:10px 14px;font-size:10pt}
+.tbox .k{font-size:8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-500);font-weight:600;margin-bottom:3px}
+.tbox .v{color:var(--steel-800)}
+.sig{margin-top:34px}
 .sig .name{font-family:var(--font-display);font-style:italic;font-size:15pt;color:var(--rms-blue);text-transform:none}
 .sig .title{font-size:10pt;color:var(--steel-600)}
 .foot{margin-top:40px;padding-top:8px;border-top:1px solid var(--steel-200);font-size:8pt;color:var(--steel-500);display:flex;justify-content:space-between}
@@ -42,7 +43,7 @@ table.items .details div{margin:1px 0}
 <body>
 <div class="lh">
   <img src="{{ base }}static/assets/logos/rms-logo-color.png" alt="Ross Machinery Sales">
-  <div class="co"><strong>Machine Tools &amp; Accessories</strong>212 North Plains Industrial Rd., Wallingford, CT 06492<br>Tel (203) 269-2950 · Fax (203) 269-2962<br>www.rossmachinery.com</div>
+  <div class="co">212 North Plains Industrial Rd., Wallingford, CT 06492<br>Tel (203) 269-2950 · Fax (203) 269-2962<br>www.rossmachinery.com</div>
 </div>
 <div class="meta">
   <div><div class="eyebrow">To</div><div class="to">{% if q.to_name %}{{ q.to_name }}
@@ -54,7 +55,7 @@ table.items .details div{margin:1px 0}
     {% if q.reference %}<div>Ref: {{ q.reference }}</div>{% endif %}
   </div>
 </div>
-<h1>{{ q.subject }}</h1>
+<p class="subject"><span>Subject:</span>{{ q.subject }}</p>
 <p>{% if q.to_name %}Dear {{ q.to_name }}:{% endif %}</p>
 <p>{{ q.intro }}</p>
 <table class="items">
@@ -64,11 +65,11 @@ table.items .details div{margin:1px 0}
   {% endfor %}
 </table>
 <div class="total"><span>Total quoted amount</span><span class="amt">{{ q.total|money }}</span></div>
-<dl class="terms">
-  {% if q.fob %}<dt>F.O.B.</dt><dd>{{ q.fob }}</dd>{% endif %}
-  {% if q.delivery %}<dt>Delivery</dt><dd>{{ q.delivery }}</dd>{% endif %}
-  {% if q.terms %}<dt>Terms</dt><dd>{{ q.terms }}</dd>{% endif %}
-</dl>
+<div class="terms">
+  <div class="tbox"><div class="k">F.O.B.</div><div class="v">{{ q.fob|default:"—" }}</div></div>
+  <div class="tbox"><div class="k">Delivery</div><div class="v">{{ q.delivery|default:"—" }}</div></div>
+  <div class="tbox"><div class="k">Terms</div><div class="v">{{ q.terms|default:"—" }}</div></div>
+</div>
 <p>{{ q.closing }}</p>
 <div class="sig"><div class="name">{{ q.signer_name }}</div><div class="title">{% if q.signer_title %}{{ q.signer_title }} · {% endif %}Ross Machinery Sales, Inc.</div></div>
 <div class="foot"><span>Ross Machinery Sales, Inc. · Quotation {{ q.number }}</span><span>Prices valid 30 days unless stated otherwise.</span></div>
