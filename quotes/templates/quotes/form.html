@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% block title %}{% if q %}Edit {{ q.number }}{% else %}New quote{% endif %}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'quote_list' %}">&larr; Quotes</a>
+<div class="panel-head"><div><p class="eyebrow">Sales</p><h1 class="display">{% if q %}Edit quote{% else %}New quote{% endif %}</h1></div></div>
+<form method="post" class="qform">{% csrf_token %}
+  <section class="card">
+    <h2>Who it's for</h2>
+    <div class="f-grid">
+      <label>Quotation number<input name="number" value="{{ initial.number }}" required></label>
+      <label>Date<input type="date" name="quote_date" value="{{ initial.quote_date }}" required></label>
+      <label>Client reference (RFQ or PO number)<input name="reference" value="{{ initial.reference|default:'' }}" placeholder="RFQ# 6000826582"></label>
+      <label>Contact name<input name="to_name" value="{{ initial.to_name|default:'' }}" placeholder="Mr. Patrick Eells"></label>
+      <label>Company<input name="to_company" value="{{ initial.to_company|default:'' }}" required placeholder="Sikorsky Aircraft"></label>
+      <label class="span2">Address<textarea name="to_address" rows="2" placeholder="6900 Main Street&#10;Stratford, CT 06615">{{ initial.to_address|default:'' }}</textarea></label>
+      <label class="span2">Subject<input name="subject" value="{{ initial.subject|default:'' }}" required placeholder="Cribmaster Software"></label>
+      <label class="span2">Opening line <span class="muted">(leave blank for the standard one)</span><textarea name="intro" rows="2">{{ initial.intro|default:'' }}</textarea></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Items</h2>
+    <table class="table qlines" id="lines">
+      <tr class="th"><td style="width:70px">Item</td><td>Description and details</td><td style="width:80px">Qty</td><td style="width:140px">Unit price</td><td style="width:40px"></td></tr>
+    </table>
+    <button type="button" class="btn btn-ghost-dark" id="addline">+ Add item</button>
+    <p class="muted small">Details go one per line under the description, like "CM Administrative Software License (10)". Item numbers are assigned automatically (00010, 00020, ...).</p>
+  </section>
+
+  <section class="card">
+    <h2>Terms and signature</h2>
+    <div class="f-grid">
+      <label>F.O.B.<input name="fob" value="{{ initial.fob|default:'' }}" placeholder="Sikorsky Aircraft"></label>
+      <label>Delivery<input name="delivery" value="{{ initial.delivery|default:'' }}" placeholder="Approx. 2 weeks, ARO"></label>
+      <label>Terms<input name="terms" value="{{ initial.terms|default:'' }}"></label>
+      <label>Signed by<input name="signer_name" value="{{ initial.signer_name|default:'' }}" required></label>
+      <label>Title<input name="signer_title" value="{{ initial.signer_title|default:'' }}" placeholder="President"></label>
+      <label class="span2">Closing paragraph<textarea name="closing" rows="2">{{ initial.closing|default:'' }}</textarea></label>
+    </div>
+  </section>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">Preview quote</button></div>
+</form>
+<template id="linerow">
+  <tr class="line">
+    <td class="mono item">00010</td>
+    <td><input class="desc" placeholder="CribMaster Enterprise Software" required><textarea class="details" rows="2" placeholder="Detail lines, one per line (optional)"></textarea></td>
+    <td><input class="qty" value="1" inputmode="decimal"></td>
+    <td><input class="price" placeholder="0.00" inputmode="decimal"></td>
+    <td><button type="button" class="x" title="Remove">×</button></td>
+  </tr>
+</template>
+<script>
+(function(){
+  const existing = {{ lines_json|safe }};
+  const table = document.getElementById('lines'), tpl = document.getElementById('linerow');
+  function renumber(){ let i=0; table.querySelectorAll('tr.line').forEach(tr=>{ tr.querySelector('.item').textContent = String((i+1)*10).padStart(5,'0');
+    tr.querySelector('.desc').name = `line-${i}-description`; tr.querySelector('.details').name = `line-${i}-details`;
+    tr.querySelector('.qty').name = `line-${i}-qty`; tr.querySelector('.price').name = `line-${i}-unit_price`; i++; }); }
+  function add(data){ const tr = tpl.content.firstElementChild.cloneNode(true);
+    if(data){ tr.querySelector('.desc').value = data.description||''; tr.querySelector('.details').value = (data.details||[]).join('\n');
+      tr.querySelector('.qty').value = data.qty||'1'; tr.querySelector('.price').value = data.unit_price||''; }
+    tr.querySelector('.x').onclick = ()=>{ tr.remove(); renumber(); };
+    table.appendChild(tr); renumber(); }
+  (existing.length ? existing : [{}]).forEach(add);
+  document.getElementById('addline').onclick = ()=>add();
+})();
+</script>
+{% endblock %}

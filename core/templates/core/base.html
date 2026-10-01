@@ -17,6 +17,7 @@
   <nav class="topnav">
     <a href="/?show=open" class="{% if show == 'open' %}active{% endif %}">Open folders</a>
     <a href="/?show=closed" class="{% if show == 'closed' %}active{% endif %}">Closed</a>
+    <a href="/quotes/" class="{% if request.resolver_match.url_name|slice:":5" == 'quote' %}active{% endif %}">Quotes</a>
   </nav>
   <div class="topbar-right">
     <span class="mono muted">{{ PO_PROFILE }}</span>

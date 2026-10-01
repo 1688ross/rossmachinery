@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}{% load money %}
+{% block title %}Quote {{ q.number }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'quote_list' %}">&larr; Quotes</a>
+<div class="panel-head">
+  <div><p class="eyebrow">{{ q.to_company }} · {{ q.quote_date|date:"M j, Y" }}</p><h1 class="display">{{ q.number }} <span class="title-sub">{{ q.subject }} · {{ q.total|money }}</span></h1></div>
+  <div class="actions">
+    <a class="btn btn-ghost-dark" href="{% url 'quote_edit' q.pk %}">Edit</a>
+    <a class="btn btn-primary" href="{% url 'quote_pdf' q.pk %}">Download PDF</a>
+    <span class="btn btn-disabled" title="Creates the folder from this quote once quotes live in the main schema (migration 0003)">Start a folder · soon</span>
+  </div>
+</div>
+<div class="paper-frame"><iframe class="paper" src="{% url 'quote_document' q.pk %}" title="Quote {{ q.number }}"></iframe></div>
+{% endblock %}

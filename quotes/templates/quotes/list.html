@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}{% load money %}
+{% block title %}Quotes{% endblock %}
+{% block content %}
+<div class="panel-head">
+  <div><p class="eyebrow">Sales</p><h1 class="display">Quotes</h1></div>
+  <a class="btn btn-accent" href="{% url 'quote_new' %}">New quote</a>
+</div>
+<section class="card">
+  <table class="table">
+    <tr class="th"><td>Number</td><td>Date</td><td>To</td><td>Subject</td><td class="amt">Total</td><td>By</td></tr>
+    {% for q in quotes %}
+    <tr><td class="mono"><a href="{% url 'quote_preview' q.pk %}">{{ q.number }}</a></td><td class="mono">{{ q.quote_date|date:"m/d/y" }}</td><td>{{ q.to_company }}</td><td>{{ q.subject }}</td><td class="mono amt">{{ q.total|money }}</td><td>{{ q.created_by.get_username }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="muted">No quotes yet. Make the first one.</td></tr>{% endfor %}
+  </table>
+</section>
+{% endblock %}

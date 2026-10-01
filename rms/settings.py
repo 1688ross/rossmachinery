@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "accounts",
     "core",
+    "quotes",
 ]
 
 MIDDLEWARE = [

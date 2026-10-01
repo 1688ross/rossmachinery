@@ -1,0 +1,75 @@
+{% load money %}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Quotation {{ q.number }}</title>
+<link rel="stylesheet" href="{{ base }}static/tokens/colors.css">
+<link rel="stylesheet" href="{{ base }}static/tokens/typography.css">
+<link rel="stylesheet" href="{{ base }}static/tokens/spacing.css">
+<style>
+@page { size: Letter; margin: 0.75in 0.8in 0.8in; }
+html,body{margin:0;background:#fff}
+body{font-family:var(--font-body);color:var(--steel-800);font-size:11pt;line-height:1.45;margin:0;padding:0}
+@media screen { body{padding:0.75in 0.8in 0.8in;max-width:6.9in;margin:0 auto} }
+@media print { body{padding:0} .foot{position:fixed;bottom:0;left:0;right:0} }
+.lh{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid var(--rms-yellow);padding-bottom:12px;margin-bottom:28px}
+.lh img{height:52px}
+.lh .co{text-align:right;font-size:9pt;color:var(--steel-600);line-height:1.5}
+.lh .co strong{display:block;color:var(--rms-navy);font-family:var(--font-display);text-transform:uppercase;font-style:italic;font-size:12pt;letter-spacing:.02em}
+.meta{display:flex;justify-content:space-between;gap:24px;margin-bottom:22px}
+.meta .to{white-space:pre-line}
+.meta .ref{text-align:right;font-size:10pt}
+.meta .ref .big{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy);font-weight:600}
+.meta .ref div{margin-bottom:2px}
+.eyebrow{font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--steel-500);font-weight:600}
+.eyebrow::before{content:"";display:inline-block;width:10px;height:3px;background:var(--rms-yellow);margin-right:6px;vertical-align:middle}
+h1{font-family:var(--font-display);font-style:italic;text-transform:uppercase;color:var(--rms-navy);font-size:20pt;margin:0 0 6px;line-height:1.05}
+p{margin:0 0 10px}
+table.items{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:10.5pt}
+table.items th{text-align:left;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--steel-500);border-bottom:2px solid var(--rms-navy);padding:4px 6px}
+table.items td{padding:8px 6px;border-bottom:1px solid var(--steel-200);vertical-align:top}
+table.items .n{text-align:right;white-space:nowrap;font-family:var(--font-mono)}
+table.items .item{font-family:var(--font-mono);color:var(--steel-600)}
+table.items .details{color:var(--steel-600);font-size:9.5pt;margin-top:4px}
+table.items .details div{margin:1px 0}
+.total{display:flex;justify-content:flex-end;gap:24px;align-items:baseline;padding:8px 6px 0;font-weight:600}
+.total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy)}
+.terms{margin:18px 0 20px;display:grid;grid-template-columns:auto 1fr;gap:3px 18px;font-size:10pt;background:var(--steel-50);padding:10px 14px;border-left:3px solid var(--rms-yellow)}
+.terms dt{color:var(--steel-500);font-weight:600}
+.terms dd{margin:0}
+.sig{margin-top:26px}
+.sig .name{font-family:var(--font-display);font-style:italic;font-size:15pt;color:var(--rms-blue);text-transform:none}
+.sig .title{font-size:10pt;color:var(--steel-600)}
+.foot{margin-top:40px;padding-top:8px;border-top:1px solid var(--steel-200);font-size:8pt;color:var(--steel-500);display:flex;justify-content:space-between}
+</style></head>
+<body>
+<div class="lh">
+  <img src="{{ base }}static/assets/logos/rms-logo-color.png" alt="Ross Machinery Sales">
+  <div class="co"><strong>Machine Tools &amp; Accessories</strong>212 North Plains Industrial Rd., Wallingford, CT 06492<br>Tel (203) 269-2950 · Fax (203) 269-2962<br>www.rossmachinery.com</div>
+</div>
+<div class="meta">
+  <div><div class="eyebrow">To</div><div class="to">{% if q.to_name %}{{ q.to_name }}
+{% endif %}{{ q.to_company }}{% if q.to_address %}
+{{ q.to_address }}{% endif %}</div></div>
+  <div class="ref">
+    <div class="eyebrow">Quotation</div><div class="big">{{ q.number }}</div>
+    <div>{{ q.quote_date|date:"F j, Y" }}</div>
+    {% if q.reference %}<div>Ref: {{ q.reference }}</div>{% endif %}
+  </div>
+</div>
+<h1>{{ q.subject }}</h1>
+<p>{% if q.to_name %}Dear {{ q.to_name }}:{% endif %}</p>
+<p>{{ q.intro }}</p>
+<table class="items">
+  <tr><th>Item</th><th>Description</th><th class="n">Qty</th><th class="n">Unit price</th><th class="n">Amount</th></tr>
+  {% for r in q.rows %}
+  <tr><td class="item">{{ r.item }}</td><td>{{ r.description }}{% if r.details %}<div class="details">{% for d in r.details %}<div>{{ d }}</div>{% endfor %}</div>{% endif %}</td><td class="n">{{ r.qty|floatformat:"-2" }}</td><td class="n">{{ r.unit_price|money }}</td><td class="n">{{ r.amount|money }}</td></tr>
+  {% endfor %}
+</table>
+<div class="total"><span>Total quoted amount</span><span class="amt">{{ q.total|money }}</span></div>
+<dl class="terms">
+  {% if q.fob %}<dt>F.O.B.</dt><dd>{{ q.fob }}</dd>{% endif %}
+  {% if q.delivery %}<dt>Delivery</dt><dd>{{ q.delivery }}</dd>{% endif %}
+  {% if q.terms %}<dt>Terms</dt><dd>{{ q.terms }}</dd>{% endif %}
+</dl>
+<p>{{ q.closing }}</p>
+<div class="sig"><div class="name">{{ q.signer_name }}</div><div class="title">{% if q.signer_title %}{{ q.signer_title }} · {% endif %}Ross Machinery Sales, Inc.</div></div>
+<div class="foot"><span>Ross Machinery Sales, Inc. · Quotation {{ q.number }}</span><span>Prices valid 30 days unless stated otherwise.</span></div>
+</body></html>
