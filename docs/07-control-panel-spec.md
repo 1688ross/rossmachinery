@@ -54,3 +54,47 @@ Then the progress lights for this PO. Then line items, documents, notes and hist
 2. It must not look like a spreadsheet.
 3. Anything that sends someone to the paper folder is a bug in the screen.
 4. The proof (stamped invoice, check stub) is one click away from the number it proves.
+
+## Revision 2026-10-01: fulfillment track, proof on every step, email intake, compact bar
+
+From Ross after showing the first screens to the office (everyone wants it).
+
+**Two tracks in one folder.** The money track stays on the folder: customer invoiced, customer paid,
+vendor invoiced, vendor paid, commission balanced, closed. The fulfillment track lives on each line
+item, because one PO can hold a custom-built machine and an off-the-shelf part moving at different
+speeds: quote sent, quote approved, order placed, in production (if applicable), carrier determined
+(including "client arranges"), processing for shipping, shipped, delivered, installed. The order in
+which pay and close happen varies by vendor and is never enforced; "closed" needs every light, in
+whatever order they arrived.
+
+**Owners and due dates.** Every step has an owner and an expected date. "Order placed" is the
+purchaser's. A line sitting in "approved" past its due date goes yellow with the owner's name and
+appears in that person's queue. Each person gets a queue (their lines and what is waiting on them);
+the owner sees the whole board. Same data, different views. This is how missed orders stop.
+
+**Proof on every step.** A step turns green only with a reference: a document, an email, or a note
+from a person. The green square links to its proof ("Customer paid, Sept 12, EFT" opens the
+remittance).
+
+**Documents per folder.** A documents tab on the PO page lists everything acquired: type, date,
+source (email, scan, upload), who filed it. Ledger entries and steps link to the same documents.
+
+**Email intake.** A watched mailbox. Every message is scanned for the company's SA number or the
+client's PO number; a match files the email and attachments into that folder. Attachment type is
+recognised from sender and content: vendor order confirmation flips "order placed"; tracking label
+flips "shipped"; vendor invoice posts a draft ledger entry for the bookkeeper to confirm; remittance
+allocates payments by PO number. No number found means an inbox for a person to file in two clicks.
+Every emailed file passes the marking step before it can be viewed.
+
+**Change detection.** A new order confirmation whose quantities or prices differ from the line
+items raises a yellow: "Vendor confirmation shows 8, order was 12. Expect the vendor invoice, the
+customer invoice, the commission and freight to change." The platform proposes the updated lines and
+recalculated quote; a person okays. A phone-call change is typed as a note and raises the same yellow.
+
+**The compact bar.** On the control panel each folder shows one bar of squares, one per step,
+filled grey, green, yellow or red; hover shows step, date and proof link. Labels appear only on the
+PO page. Must stay readable at forty lines a month for one client.
+
+**People.** Owner (large machine sales), Ashley (tooling, materials and accessories for the same
+clients; around forty orders a month for the biggest client), Zach (purchaser; places the orders),
+Tammie (payments). Ross builds and administers.
