@@ -26,11 +26,12 @@ table.items{width:100%;border-collapse:collapse;margin:20px 0 6px;font-size:10.5
 table.items th{text-align:left;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--steel-500);border-bottom:2px solid var(--rms-navy);padding:4px 6px}
 table.items td{padding:8px 6px;border-bottom:1px solid var(--steel-200);vertical-align:top}
 table.items .n{text-align:right;white-space:nowrap;font-family:var(--font-mono)}
-table.items .item{font-family:var(--font-mono);color:var(--steel-600)}
-table.items .details{color:var(--steel-600);font-size:9.5pt;margin-top:4px}
+table.items .item{font-family:var(--font-mono);color:var(--steel-600);font-weight:600}
+table.items td.desc{font-weight:700}
+table.items .details{color:var(--steel-600);font-size:9.5pt;margin-top:4px;font-weight:400}
 table.items .details div{margin:1px 0}
 .total{display:flex;justify-content:flex-end;gap:18px;align-items:baseline;padding:10px 6px 0}
-.total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy)}
+.total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy);font-weight:600}
 .terms{margin:26px 0 28px;display:flex;gap:14px}
 .tbox{flex:1;background:var(--steel-50);border-left:3px solid var(--rms-yellow);padding:10px 14px;font-size:10pt}
 .tbox .k{font-size:8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-500);font-weight:600;margin-bottom:3px}
@@ -61,7 +62,7 @@ table.items .details div{margin:1px 0}
 <table class="items">
   <tr><th>Item</th><th>Description</th><th class="n">Qty</th><th class="n">Unit price</th><th class="n">Amount</th></tr>
   {% for r in q.rows %}
-  <tr><td class="item">{{ r.item }}</td><td>{{ r.description }}{% if r.details %}<div class="details">{% for d in r.details %}<div>{{ d }}</div>{% endfor %}</div>{% endif %}</td><td class="n">{{ r.qty|floatformat:"-2" }}</td><td class="n">{{ r.unit_price|money }}</td><td class="n">{{ r.amount|money }}</td></tr>
+  <tr><td class="item">{{ r.item }}</td><td class="desc">{{ r.description }}{% if r.details %}<div class="details">{% for d in r.details %}<div>{{ d }}</div>{% endfor %}</div>{% endif %}</td><td class="n">{{ r.qty|floatformat:"-2" }}</td><td class="n">{{ r.unit_price|money }}</td><td class="n">{{ r.amount|money }}</td></tr>
   {% endfor %}
 </table>
 <div class="total"><span class="eyebrow">Total quoted amount</span><span class="amt">{{ q.total|money }}</span></div>

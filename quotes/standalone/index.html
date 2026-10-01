@@ -119,12 +119,13 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .sheet table.items{width:100%;border-collapse:collapse;margin:20px 0 6px;font-size:10.5pt}
 .sheet table.items th{text-align:left;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border-bottom:2px solid var(--navy-fixed);padding:4px 6px;font-weight:600}
 .sheet table.items td{padding:8px 6px;border-bottom:1px solid var(--paper-line);vertical-align:top}
+.sheet table.items td.desc{font-weight:700}
 .sheet table.items .n{text-align:right;white-space:nowrap;font-family:var(--font-mono)}
-.sheet table.items .item{font-family:var(--font-mono);color:var(--ink-2)}
-.sheet table.items .details{color:var(--ink-2);font-size:9.5pt;margin-top:4px}
+.sheet table.items .item{font-family:var(--font-mono);color:var(--ink-2);font-weight:600}
+.sheet table.items .details{color:var(--ink-2);font-size:9.5pt;margin-top:4px;font-weight:400}
 .sheet table.items .details div{margin:1px 0}
 .sheet .total{display:flex;justify-content:flex-end;gap:18px;align-items:baseline;padding:10px 6px 0}
-.sheet .total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--navy-fixed)}
+.sheet .total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--navy-fixed);font-weight:600}
 .sheet .terms{margin:26px 0 28px;display:flex;gap:14px}
 .sheet .tbox{flex:1;background:var(--paper-fill);border-left:3px solid var(--yellow);padding:10px 14px;font-size:10pt;min-width:0}
 .sheet .tbox .k{font-size:8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:3px}
@@ -358,7 +359,7 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
     rows.forEach(function(r){
       var tr = document.createElement('tr');
       var td1 = document.createElement('td'); td1.className = 'item'; td1.textContent = r.item;
-      var td2 = document.createElement('td'); td2.className = 'wrapword'; td2.appendChild(document.createTextNode(r.description));
+      var td2 = document.createElement('td'); td2.className = 'wrapword desc'; td2.appendChild(document.createTextNode(r.description));
       if (r.details.length){ var dd = document.createElement('div'); dd.className = 'details'; r.details.forEach(function(d){ var x = document.createElement('div'); x.textContent = d; dd.appendChild(x); }); td2.appendChild(dd); }
       var td3 = document.createElement('td'); td3.className = 'n'; td3.textContent = fmtQty(r.qty);
       var td4 = document.createElement('td'); td4.className = 'n'; td4.textContent = money(r.unit_price);
@@ -433,10 +434,10 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
     var th = function(t, right){ return { text: t.toUpperCase(), font: 'BarlowSemi', fontSize: 7.5, characterSpacing: 0.8, color: C.ink3, alignment: right ? 'right' : 'left' }; };
     var body = [[th('Item'), th('Description'), th('Qty', true), th('Unit price', true), th('Amount', true)]];
     rows.forEach(function(r){
-      var desc = [{ text: r.description || ' ' }];
+      var desc = [{ text: r.description || ' ', bold: true }];
       if (r.details.length) desc.push({ stack: r.details.map(function(d){ return { text: d }; }), fontSize: 9, color: C.ink2, margin: [0, 2, 0, 0] });
       body.push([
-        { text: r.item, font: 'Mono', fontSize: 9.5, color: C.ink2 },
+        { text: r.item, font: 'Mono', fontSize: 9.5, color: C.ink2, bold: true },
         { stack: desc },
         { text: fmtQty(r.qty), font: 'Mono', fontSize: 10, alignment: 'right' },
         { text: money(r.unit_price), font: 'Mono', fontSize: 10, alignment: 'right' },
@@ -475,7 +476,7 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
     if (q.to_name) content.push({ text: 'Dear ' + q.to_name + ':', margin: [0, 0, 0, 9] });
     content.push({ text: q.intro || defaultIntro(q.subject), margin: [0, 0, 0, 14] });
     content.push(itemsTable(rows));
-    content.push({ columns: [{ width: '*', text: '' }, eyebrow('Total quoted amount', 116, 6.5), { width: 'auto', text: money(total), font: 'Mono', fontSize: 14, color: C.navy, margin: [12, -4.5, 0, 0] }], columnGap: 0, margin: [0, 8, 0, 0] });
+    content.push({ columns: [{ width: '*', text: '' }, eyebrow('Total quoted amount', 116, 6.5), { width: 'auto', text: money(total), font: 'Mono', fontSize: 14, color: C.navy, bold: true, margin: [12, -4.5, 0, 0] }], columnGap: 0, margin: [0, 8, 0, 0] });
     content.push(termsTable(q));
     content.push({ text: q.closing || DEFAULT_CLOSING, margin: [0, 0, 0, 22] });
     content.push({ unbreakable: true, stack: [
