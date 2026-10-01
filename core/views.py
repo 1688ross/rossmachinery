@@ -75,9 +75,9 @@ def panel(request):
             overall = "green"
         reason = v.reasons[0][1] if v.reasons else None
         if waiting and waiting["late"] and (not v.reasons or ORDER[waiting["state"]] <= ORDER[v.reasons[0][0]]):
-            reason = waiting["late"][0]["title"] + (f" (owner: {', '.join(waiting['owners'])})" if waiting["owners"] else "")
+            reason = waiting["late"][0]["title"]
         elif reason is None and waiting:
-            reason = f"Waiting on: {waiting['label'].lower()}" + (f" ({', '.join(waiting['owners'])})" if waiting["owners"] else "")
+            reason = f"Waiting on: {waiting['label'].lower()}"
         rows.append({"f": f, "v": v, "fbar": fbar, "mbar": money_bar(v), "overall": overall, "reason": reason, "waiting": waiting})
     rows.sort(key=lambda r: (ORDER[r["overall"]], -r["f"].opened_at.timestamp()))
     counts = defaultdict(int)
@@ -124,8 +124,7 @@ def po_detail(request, po_id):
             if q["state"] in ("yellow", "red") and q["step"].flag:
                 reasons.append((q["state"], f"Line {l.line_no:05d} {q['label'].lower()}: {q['step'].flag_reason}"))
             elif q["state"] == "yellow":
-                who = f" Owner: {q['owner'].full_name}." if q["owner"] else ""
-                reasons.append(("yellow", f"Line {l.line_no:05d}: {q['title']}.{who}"))
+                reasons.append(("yellow", f"Line {l.line_no:05d}: {q['title']}."))
     reasons.sort(key=lambda r: ORDER[r[0]])
     overall = worst([v.overall] + [q["state"] for q in fbar]) if f.status != "closed" else "green"
     return render(request, "core/po_detail.html", {

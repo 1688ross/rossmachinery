@@ -85,7 +85,7 @@
       <td class="step-cell">
         {% if q.doc %}<a href="{% url 'doc_detail' q.doc.id %}" class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></a>
         {% else %}<span class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></span>{% endif %}
-        <div class="step-meta">{% if q.step.done_at %}{{ q.step.done_at|date:"n/j" }}{% elif q.step.due_date %}<span class="muted">due {{ q.step.due_date|date:"n/j" }}</span>{% endif %}{% if q.doc %}<a class="proof" href="{% url 'doc_detail' q.doc.id %}">proof</a>{% elif q.step.proof_note %}<span class="proof-note" title="{{ q.step.proof_note }}">note</span>{% endif %}{% if not q.step.done_at and q.step.applicable and q.owner %}<div class="owner">{{ q.owner.full_name|truncatewords:1|cut:"…" }}</div>{% endif %}</div>
+        <div class="step-meta">{% if q.step.done_at %}{{ q.step.done_at|date:"n/j" }}{% elif q.step.due_date %}<span class="muted">due {{ q.step.due_date|date:"n/j" }}</span>{% endif %}{% if q.doc %}<a class="proof" href="{% url 'doc_detail' q.doc.id %}">proof</a>{% elif q.step.proof_note %}<span class="proof-note" title="{{ q.step.proof_note }}">note</span>{% endif %}</div>
       </td>
       {% endfor %}
     </tr>
