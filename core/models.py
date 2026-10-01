@@ -80,6 +80,10 @@ class LineItem(models.Model):
     quantity = models.DecimalField(max_digits=16, decimal_places=3)
     unit_price = models.DecimalField(max_digits=16, decimal_places=2)
     extended_amount = models.DecimalField(max_digits=16, decimal_places=2)
+    tracking_number = models.TextField(null=True)
+    tracking_carrier_party_id = models.UUIDField(null=True)
+    shipped_at = models.DateTimeField(null=True)
+    delivered_at = models.DateTimeField(null=True)
 
     class Meta:
         managed = False
@@ -137,3 +141,61 @@ class ChecklistItem(models.Model):
     class Meta:
         managed = False
         db_table = 'app"."po_close_checklist_items'
+
+
+class Document(models.Model):
+    id = models.UUIDField(primary_key=True)
+    tenant_id = models.UUIDField()
+    po_id = models.UUIDField(null=True)
+    kind = models.TextField()
+    control_marking = models.TextField()
+    title = models.TextField(null=True)
+    original_filename = models.TextField(null=True)
+    storage_key = models.TextField()
+    mime_type = models.TextField()
+    byte_size = models.BigIntegerField()
+    page_count = models.IntegerField(null=True)
+    document_date = models.DateField(null=True)
+    source = models.TextField()
+    email_from = models.TextField(null=True)
+    email_subject = models.TextField(null=True)
+    received_at = models.DateTimeField(null=True)
+    uploaded_by = models.UUIDField(null=True)
+    uploaded_at = models.DateTimeField()
+    deleted_at = models.DateTimeField(null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'app"."documents'
+
+
+class LineStep(models.Model):
+    """One fulfillment step on one line item (migration 0002)."""
+    id = models.UUIDField(primary_key=True)
+    tenant_id = models.UUIDField()
+    po_id = models.UUIDField()
+    line_item_id = models.UUIDField()
+    step_key = models.TextField()
+    applicable = models.BooleanField()
+    owner_user_id = models.UUIDField(null=True)
+    due_date = models.DateField(null=True)
+    done_at = models.DateTimeField(null=True)
+    flag = models.TextField(null=True)
+    flag_reason = models.TextField(null=True)
+    proof_document_id = models.UUIDField(null=True)
+    proof_note = models.TextField(null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'app"."line_steps'
+
+
+class Member(models.Model):
+    """Who is who, for owner names on steps. Read through app.users joined by the view below."""
+    id = models.UUIDField(primary_key=True)
+    full_name = models.TextField()
+    email = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'app"."users'

@@ -14,25 +14,30 @@
   </div>
 </div>
 
+<div class="legend">
+  <span><span class="sq sq-green"></span>done, with proof</span>
+  <span><span class="sq sq-yellow"></span>look at this</span>
+  <span><span class="sq sq-red"></span>pick up the phone</span>
+  <span><span class="sq sq-grey"></span>not yet</span>
+  <span><span class="sq sq-na"></span>not applicable</span>
+  <span class="legend-note">Fulfillment squares, then money squares. Hover any square for the detail.</span>
+</div>
+
 <section class="board">
   {% for r in rows %}
-  <a class="row row-{{ r.v.overall }}" href="{% url 'po_detail' r.f.po_id %}">
-    <span class="beacon beacon-{{ r.v.overall }}" aria-label="{{ r.v.overall }}"></span>
+  <a class="row row-{{ r.overall }}" href="{% url 'po_detail' r.f.po_id %}">
+    <span class="beacon beacon-{{ r.overall }}" aria-label="{{ r.overall }}"></span>
     <span class="who">
       <span class="po mono">{{ r.f.client_order_number|default:r.f.po_number }}</span>
       <span class="client">{{ r.f.client_name }}</span>
       <span class="title">{{ r.f.title }}</span>
     </span>
-    <span class="lights">
-      {% for l in r.v.lights %}
-      <span class="light light-{{ l.state }}" title="{{ l.label }}{% if l.note %}: {{ l.note }}{% endif %}">
-        <span class="dot"></span><span class="lbl">{{ l.label }}</span>
-      </span>
-      {% endfor %}
+    <span class="bars">
+      <span class="bar">{% for q in r.fbar %}<span class="sq sq-{{ q.state }}" title="{{ q.title }}"></span>{% endfor %}</span>
+      <span class="bar-gap"></span>
+      <span class="bar">{% for q in r.mbar %}<span class="sq sq-{{ q.state }} sq-money" title="{{ q.title }}"></span>{% endfor %}</span>
     </span>
-    <span class="why">
-      {% if r.v.reasons %}{{ r.v.reasons.0.1 }}{% else %}<span class="muted">Nothing needs attention.</span>{% endif %}
-    </span>
+    <span class="why">{% if r.reason %}{{ r.reason }}{% else %}<span class="muted">Nothing needs attention.</span>{% endif %}</span>
   </a>
   {% empty %}
   <p class="muted">No folders here.</p>

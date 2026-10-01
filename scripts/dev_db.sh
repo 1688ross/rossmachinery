@@ -11,4 +11,6 @@ psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/schema/migrations/0001_init.sql"
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='po_api') THEN CREATE ROLE po_api LOGIN PASSWORD 'po_api_dev'; END IF; END \$\$;" \
      -c "GRANT app_user TO po_api;" -c "CREATE SCHEMA IF NOT EXISTS django AUTHORIZATION po_api;"
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/fixtures/seed_dev.sql"
-echo "== $DB ready (schema 0001 + synthetic seed)"
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/schema/migrations/0002_fulfillment_and_sources.sql"
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/fixtures/seed_dev_0002.sql"
+echo "== $DB ready (schema 0001 + 0002, synthetic seed)"

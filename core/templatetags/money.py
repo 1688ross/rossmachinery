@@ -26,3 +26,9 @@ KIND_LABELS = {
 @register.filter
 def kind_label(kind):
     return KIND_LABELS.get(kind, kind.replace("_", " ").capitalize())
+
+
+@register.filter
+def nice(value):
+    """snake_case -> Sentence case."""
+    return str(value).replace("_", " ").capitalize()

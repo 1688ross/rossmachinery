@@ -7,16 +7,37 @@
     <p class="eyebrow">{{ f.client_name }} · {{ f.po_number }} · opened {{ f.opened_at|date:"M j, Y" }}</p>
     <h1 class="display">{{ f.client_order_number|default:f.po_number }} <span class="title-sub">{{ f.title }}</span></h1>
   </div>
-  <span class="beacon beacon-{{ v.overall }} beacon-lg"></span>
+  <span class="beacon beacon-{{ overall }} beacon-lg"></span>
 </div>
 
-{% if v.reasons %}
-<section class="reasons reasons-{{ v.overall }}">
-  {% for state, text in v.reasons %}
-  <p class="reason reason-{{ state }}"><span class="dot"></span>{{ text }}</p>
-  {% endfor %}
+{% if reasons %}
+<section class="reasons reasons-{{ overall }}">
+  {% for state, text in reasons %}<p class="reason reason-{{ state }}"><span class="dot"></span>{{ text }}</p>{% endfor %}
 </section>
 {% endif %}
+
+<nav class="tabs">
+  <a href="?tab=folder" class="{% if tab == 'folder' %}active{% endif %}">Folder</a>
+  <a href="?tab=documents" class="{% if tab == 'documents' %}active{% endif %}">Documents <span class="count">{{ docs|length }}</span></a>
+</nav>
+
+{% if tab == 'documents' %}
+<section class="card">
+  <table class="table docs">
+    <tr class="th"><td>Date</td><td>Document</td><td>Type</td><td>Source</td><td>Filed by</td><td></td></tr>
+    {% for d in docs %}
+    <tr>
+      <td class="mono">{{ d.document_date|date:"m/d/y" }}</td>
+      <td><a href="{% url 'doc_detail' d.id %}">{{ d.title|default:d.original_filename }}</a>{% if d.email_subject %}<div class="muted small">{{ d.email_from }} · "{{ d.email_subject }}"</div>{% endif %}</td>
+      <td>{{ d.kind|nice }}</td>
+      <td>{{ d.source|capfirst }}</td>
+      <td>{{ d.uploader.full_name|default:"system" }}</td>
+      <td class="mono muted">{{ d.page_count|default:"" }}{% if d.page_count %} p{% endif %}</td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="muted">No documents filed yet.</td></tr>{% endfor %}
+  </table>
+</section>
+{% else %}
 
 <section class="topsheet">
   <div class="sheet-col">
@@ -26,7 +47,7 @@
     <div class="kv {% if f.open_client_balance > 0 %}kv-open{% endif %}"><span>Balance</span><span class="mono">{{ f.open_client_balance|money }}</span></div>
     <table class="ledger">
       {% for e in client_entries %}
-      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
+      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}{% if e.doc %} <a class="proof" href="{% url 'doc_detail' e.doc.id %}">proof</a>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
       {% endfor %}
     </table>
   </div>
@@ -37,7 +58,7 @@
     <div class="kv {% if f.open_vendor_balance > 0 %}kv-open{% endif %}"><span>Balance</span><span class="mono">{{ f.open_vendor_balance|money }}</span></div>
     <table class="ledger">
       {% for e in vendor_entries %}
-      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
+      <tr class="{{ e.kind }}"><td class="mono">{{ e.entry_date|date:"m/d/y" }}</td><td>{{ e.kind|kind_label }} {{ e.reference }}{% if e.memo %} <span class="muted">· {{ e.memo }}</span>{% endif %}{% if e.doc %} <a class="proof" href="{% url 'doc_detail' e.doc.id %}">proof</a>{% endif %}</td><td class="mono amt">{{ e.signed_amount|signed }}</td></tr>
       {% endfor %}
     </table>
   </div>
@@ -47,31 +68,44 @@
     <div class="kv"><span>Freight</span><span class="mono">{{ f.freight|money }}</span></div>
     <div class="kv"><span>Status</span><span>{{ f.status|cut:"_"|capfirst }}</span></div>
     <div class="kv"><span>Ready to close</span><span>{{ f.ready_to_close|yesno:"Yes,Not yet" }}</span></div>
+    <p class="eyebrow mt">Money</p>
+    <span class="bar bar-lg">{% for q in mbar %}<span class="sq sq-{{ q.state }} sq-money" title="{{ q.title }}"></span>{% endfor %}</span>
   </div>
 </section>
 
-<section class="lights lights-detail">
-  {% for l in v.lights %}
-  <span class="light light-{{ l.state }}"><span class="dot"></span><span class="lbl">{{ l.label }}</span>{% if l.note %}<span class="note mono">{{ l.note }}</span>{% endif %}</span>
-  {% endfor %}
+<section class="card">
+  <h2>Deliverables</h2>
+  <table class="table steps">
+    <tr class="th"><td></td><td>Line</td>{% for k, label in step_labels %}<td class="step-h">{{ label }}</td>{% endfor %}</tr>
+    {% for l in lines %}
+    <tr>
+      <td class="mono">{{ l.line_no|stringformat:"05d" }}</td>
+      <td>{{ l.description }}<div class="muted small">{{ l.category }} · {{ l.quantity|floatformat:0 }} × {{ l.unit_price|signed }}</div></td>
+      {% for q in l.squares %}
+      <td class="step-cell">
+        {% if q.doc %}<a href="{% url 'doc_detail' q.doc.id %}" class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></a>
+        {% else %}<span class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></span>{% endif %}
+        <div class="step-meta">{% if q.step.done_at %}{{ q.step.done_at|date:"n/j" }}{% elif q.step.due_date %}<span class="muted">due {{ q.step.due_date|date:"n/j" }}</span>{% endif %}{% if q.doc %}<a class="proof" href="{% url 'doc_detail' q.doc.id %}">proof</a>{% elif q.step.proof_note %}<span class="proof-note" title="{{ q.step.proof_note }}">note</span>{% endif %}{% if not q.step.done_at and q.step.applicable and q.owner %}<div class="owner">{{ q.owner.full_name|truncatewords:1|cut:"…" }}</div>{% endif %}</div>
+      </td>
+      {% endfor %}
+    </tr>
+    {% empty %}<tr><td class="muted">No line items yet.</td></tr>{% endfor %}
+  </table>
 </section>
 
 <div class="grid-2">
-  <section class="card">
-    <h2>Line items</h2>
-    <table class="table">
-      {% for l in lines %}<tr><td class="mono">{{ l.line_no|stringformat:"05d" }}</td><td>{{ l.description }} <span class="muted">({{ l.category }})</span></td><td class="mono amt">{{ l.quantity|floatformat:0 }} × {{ l.unit_price|signed }}</td><td class="mono amt">{{ l.extended_amount|signed }}</td></tr>{% empty %}<tr><td class="muted">No line items yet.</td></tr>{% endfor %}
-    </table>
-  </section>
   <section class="card">
     <h2>Notes</h2>
     {% for n in notes %}
     <div class="sticky {% if n.resolved_at %}resolved{% endif %}"><span class="mono muted">{{ n.created_at|date:"m/d/y" }}</span> {{ n.body }}{% if n.resolved_at %} <span class="muted">· resolved</span>{% endif %}</div>
     {% empty %}<p class="muted">No notes.</p>{% endfor %}
-    <h2 class="mt">Close-out checklist</h2>
+  </section>
+  <section class="card">
+    <h2>Close-out checklist</h2>
     <ul class="checklist">
       {% for c in checklist %}<li class="{% if c.completed_at %}done{% endif %}">{{ c.label }}{% if c.is_required %} <span class="muted">(required)</span>{% endif %}</li>{% endfor %}
     </ul>
   </section>
 </div>
+{% endif %}
 {% endblock %}

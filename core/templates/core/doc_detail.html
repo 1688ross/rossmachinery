@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}{% load money %}
+{% block title %}{{ d.title|default:d.original_filename }}{% endblock %}
+{% block content %}
+{% if f %}<a class="back" href="{% url 'po_detail' f.po_id %}?tab=documents">&larr; {{ f.client_order_number|default:f.po_number }} documents</a>{% endif %}
+<p class="eyebrow">{{ d.kind|nice }} · {{ d.source|capfirst }}{% if d.document_date %} · {{ d.document_date|date:"M j, Y" }}{% endif %}</p>
+<h1 class="display">{{ d.title|default:d.original_filename }}</h1>
+<section class="card doc-card">
+  <div class="kv"><span>File</span><span class="mono">{{ d.original_filename }} · {{ d.mime_type }} · {{ d.byte_size|filesizeformat }}{% if d.page_count %} · {{ d.page_count }} pages{% endif %}</span></div>
+  {% if d.email_from %}<div class="kv"><span>Email</span><span>From {{ d.email_from }} · "{{ d.email_subject }}" · received {{ d.received_at|date:"M j, Y g:i a" }}</span></div>{% endif %}
+  <div class="kv"><span>Filed by</span><span>{{ uploader.full_name|default:"system" }} · {{ d.uploaded_at|date:"M j, Y" }}</span></div>
+  <div class="kv"><span>Marking</span><span>{{ d.control_marking|upper }}</span></div>
+  <div class="viewer-placeholder">Document viewer comes with the file store (plan task F5). The record, its proof links and its audit trail are live now.</div>
+</section>
+{% endblock %}

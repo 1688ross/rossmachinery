@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand
 from accounts.models import User
 
-DEV = [("chuck", "local|chuck"), ("ross", "local|ross"), ("tammie", "local|tammie")]
+DEV = [("chuck", "local|chuck"), ("ross", "local|ross"), ("tammie", "local|tammie"), ("ashley", "local|ashley"), ("zach", "local|zach")]
 
 class Command(BaseCommand):
     def handle(self, *args, **opts):
