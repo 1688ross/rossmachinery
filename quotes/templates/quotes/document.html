@@ -19,8 +19,8 @@ body{font-family:var(--font-body);color:var(--steel-800);font-size:11pt;line-hei
 .meta .ref div{margin-bottom:2px}
 .eyebrow{font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--steel-500);font-weight:600}
 .eyebrow::before{content:"";display:inline-block;width:10px;height:3px;background:var(--rms-yellow);margin-right:6px;vertical-align:middle}
-.subject{font-weight:700;color:var(--rms-navy);font-size:11.5pt;margin:0 0 14px}
-.subject span{color:var(--steel-500);font-weight:600;margin-right:6px}
+.subject{margin:0 0 14px;display:flex;align-items:baseline;gap:10px}
+.subject strong{font-weight:700;color:var(--rms-navy);font-size:11.5pt}
 p{margin:0 0 12px}
 table.items{width:100%;border-collapse:collapse;margin:20px 0 6px;font-size:10.5pt}
 table.items th{text-align:left;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--steel-500);border-bottom:2px solid var(--rms-navy);padding:4px 6px}
@@ -29,7 +29,7 @@ table.items .n{text-align:right;white-space:nowrap;font-family:var(--font-mono)}
 table.items .item{font-family:var(--font-mono);color:var(--steel-600)}
 table.items .details{color:var(--steel-600);font-size:9.5pt;margin-top:4px}
 table.items .details div{margin:1px 0}
-.total{display:flex;justify-content:flex-end;gap:24px;align-items:baseline;padding:10px 6px 0;font-weight:600}
+.total{display:flex;justify-content:flex-end;gap:18px;align-items:baseline;padding:10px 6px 0}
 .total .amt{font-family:var(--font-mono);font-size:14pt;color:var(--rms-navy)}
 .terms{margin:26px 0 28px;display:flex;gap:14px}
 .tbox{flex:1;background:var(--steel-50);border-left:3px solid var(--rms-yellow);padding:10px 14px;font-size:10pt}
@@ -55,7 +55,7 @@ table.items .details div{margin:1px 0}
     {% if q.reference %}<div>Ref: {{ q.reference }}</div>{% endif %}
   </div>
 </div>
-<p class="subject"><span>Subject:</span>{{ q.subject }}</p>
+<p class="subject"><span class="eyebrow">Subject</span><strong>{{ q.subject }}</strong></p>
 <p>{% if q.to_name %}Dear {{ q.to_name }}:{% endif %}</p>
 <p>{{ q.intro }}</p>
 <table class="items">
@@ -64,7 +64,7 @@ table.items .details div{margin:1px 0}
   <tr><td class="item">{{ r.item }}</td><td>{{ r.description }}{% if r.details %}<div class="details">{% for d in r.details %}<div>{{ d }}</div>{% endfor %}</div>{% endif %}</td><td class="n">{{ r.qty|floatformat:"-2" }}</td><td class="n">{{ r.unit_price|money }}</td><td class="n">{{ r.amount|money }}</td></tr>
   {% endfor %}
 </table>
-<div class="total"><span>Total quoted amount</span><span class="amt">{{ q.total|money }}</span></div>
+<div class="total"><span class="eyebrow">Total quoted amount</span><span class="amt">{{ q.total|money }}</span></div>
 <div class="terms">
   <div class="tbox"><div class="k">F.O.B.</div><div class="v">{{ q.fob|default:"—" }}</div></div>
   <div class="tbox"><div class="k">Delivery</div><div class="v">{{ q.delivery|default:"—" }}</div></div>
