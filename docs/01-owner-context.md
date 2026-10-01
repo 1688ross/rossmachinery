@@ -135,3 +135,4 @@ every screen is reviewed against.
 - **QuickBooks Desktop**, confirmed. Edition and year still to read off the start screen.
 - **Tammie closes the folders.** She is the sign-off on the close-out step. In the schema that is the
   manager role (close needs manager or above), which is how she is seeded.
+- **All users are US citizens and have been cleared with the client.** The export-control gating is a safety net, not a daily path. Each user still gets an attestation recorded in the system by an admin, so the record exists if anyone asks.
