@@ -30,7 +30,8 @@ h2{font:var(--type-h3);color:var(--text-strong);margin:0 0 var(--space-3)}
 .pill-grey{color:var(--text-muted)}
 
 .board{display:flex;flex-direction:column;gap:var(--space-2)}
-.row{display:grid;grid-template-columns:18px minmax(220px,1.2fr) minmax(420px,2fr) minmax(220px,1.5fr);gap:var(--space-4);align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);color:inherit;box-shadow:var(--shadow-xs);transition:transform 160ms cubic-bezier(.2,0,.1,1),box-shadow 160ms}
+.row{display:grid;grid-template-columns:18px minmax(220px,1.2fr) minmax(420px,2fr) minmax(220px,1.5fr);gap:var(--space-4);align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);color:inherit;box-shadow:var(--shadow-xs);position:relative;transition:transform 160ms cubic-bezier(.2,0,.1,1),box-shadow 160ms}
+.row:hover,.row:focus-within{z-index:10}
 .row:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .row-red{border-left-color:var(--status-danger)} .row-yellow{border-left-color:var(--status-warning)} .row-green{border-left-color:var(--status-success)}
 .who{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -100,7 +101,9 @@ h2{font:var(--type-h3);color:var(--text-strong);margin:0 0 var(--space-3)}
 .legend{display:flex;gap:var(--space-4);flex-wrap:wrap;font:var(--type-caption);color:var(--text-muted);margin:0 0 var(--space-3)}
 .legend>span{display:flex;align-items:center;gap:6px}
 .legend-note{margin-left:auto}
-.sq{display:inline-block;width:14px;height:14px;border-radius:2px;background:var(--steel-200);border:1px solid var(--steel-300);box-sizing:border-box}
+.sq{display:inline-block;width:14px;height:14px;border-radius:2px;background:var(--steel-200);border:1px solid var(--steel-300);box-sizing:border-box;position:relative}
+.sq:focus-visible{outline:2px solid var(--rms-blue);outline-offset:1px}
+.sq:hover,.sq:focus-visible{z-index:5}
 .sq-green{background:var(--status-success);border-color:var(--status-success)}
 .sq-yellow{background:var(--status-warning);border-color:var(--status-warning)}
 .sq-red{background:var(--status-danger);border-color:var(--status-danger)}
@@ -147,3 +150,11 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .form-actions{display:flex;justify-content:flex-end;margin:var(--space-2) 0 var(--space-6)}
 .paper-frame{background:var(--steel-200);padding:var(--space-5);border-radius:var(--radius-md)}
 .paper{width:8.5in;max-width:100%;height:11in;border:0;background:#fff;display:block;margin:0 auto;box-shadow:var(--shadow-lg)}
+
+/* Hover card on a square: the step name, then the detail. */
+.tip{display:none;position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);min-width:160px;max-width:300px;width:max-content;background:var(--rms-navy);color:#fff;border-left:3px solid var(--rms-yellow);border-radius:var(--radius-md);padding:8px 11px;font:var(--type-body-sm);line-height:1.4;text-align:left;white-space:normal;box-shadow:var(--shadow-md);flex-direction:column;gap:2px;pointer-events:none;z-index:6}
+.tip::before{content:"";position:absolute;top:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top:0;border-bottom-color:var(--rms-navy)}
+.tip b{font-weight:600;letter-spacing:.02em}
+.tip span{color:var(--rms-blue-200)}
+.sq:hover .tip,.sq:focus-visible .tip{display:flex}
+.bar .sq:first-child .tip{left:0;transform:none}.bar .sq:first-child .tip::before{left:4px;transform:none}

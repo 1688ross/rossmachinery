@@ -33,9 +33,9 @@
       <span class="title">{{ r.f.title }}</span>
     </span>
     <span class="bars">
-      <span class="bar">{% for q in r.fbar %}<span class="sq sq-{{ q.state }}" title="{{ q.title }}"></span>{% endfor %}</span>
+      <span class="bar">{% for q in r.fbar %}<span class="sq sq-{{ q.state }}" tabindex="0" aria-label="{{ q.title }}"><span class="tip" role="tooltip"><b>{{ q.label }}</b>{% for l in q.lines %}<span>{{ l }}</span>{% endfor %}</span></span>{% endfor %}</span>
       <span class="bar-gap"></span>
-      <span class="bar">{% for q in r.mbar %}<span class="sq sq-{{ q.state }} sq-money" title="{{ q.title }}"></span>{% endfor %}</span>
+      <span class="bar">{% for q in r.mbar %}<span class="sq sq-{{ q.state }} sq-money" tabindex="0" aria-label="{{ q.title }}"><span class="tip" role="tooltip"><b>{{ q.label }}</b>{% for l in q.lines %}<span>{{ l }}</span>{% endfor %}</span></span>{% endfor %}</span>
     </span>
     <span class="why">{% if r.reason %}{{ r.reason }}{% else %}<span class="muted">Nothing needs attention.</span>{% endif %}</span>
   </a>

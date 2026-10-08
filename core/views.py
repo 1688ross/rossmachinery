@@ -33,16 +33,28 @@ def fulfillment_bar(steps, members, lines_by_id=None):
     by_key = defaultdict(list)
     for s in steps:
         by_key[s.step_key].append(s)
+    multi_line = len({s.line_item_id for s in steps}) > 1
     bar, waiting = [], None
     for key, label in STEPS:
         rows = by_key.get(key, [])
         if not rows or all(not r.applicable for r in rows):
-            bar.append({"key": key, "state": "na", "title": f"{label}: not applicable"})
+            bar.append({"key": key, "state": "na", "label": label, "lines": ["Not applicable"], "title": f"{label}: not applicable"})
             continue
         sq = [dict(zip(("state", "title"), square(r, None, (lines_by_id or {}).get(r.line_item_id))), key=r.step_key, step=r) for r in rows]
         state = worst([q["state"] for q in sq])
         titles = [q["title"] for q in sq if q["state"] != "na"]
-        bar.append({"key": key, "state": state, "title": " / ".join(titles[:3]) + (" …" if len(titles) > 3 else "")})
+        # Hover card lines: worst first, prefixed with the line number when the folder has more than one line.
+        items = sorted([q for q in sq if q["state"] != "na"], key=lambda q: DETAIL_ORDER[q["state"]])
+        details = []
+        for q in items[:3]:
+            li = (lines_by_id or {}).get(q["step"].line_item_id)
+            prefix = f"{str(li.line_no).zfill(5)} · " if multi_line and li is not None else ""
+            t = q["title"]
+            details.append(prefix + (t[len(label) + 2:] if t.startswith(label + ": ") else t))
+        if len(items) > 3:
+            details.append("…")
+        bar.append({"key": key, "state": state, "label": label, "lines": details,
+                    "title": " / ".join(titles[:3]) + (" …" if len(titles) > 3 else "")})
         if waiting is None and state in ("grey", "yellow", "red"):
             owners = {r.owner_user_id for r in rows if r.done_at is None and r.applicable}
             names = [members[o].full_name.split()[0] for o in owners if o in members]
@@ -51,8 +63,13 @@ def fulfillment_bar(steps, members, lines_by_id=None):
     return bar, waiting
 
 
+DETAIL_ORDER = {"red": 0, "yellow": 1, "grey": 2, "green": 3, "na": 4}
+STATE_WORDS = {"green": "Done, with proof", "yellow": "Look at this", "red": "Pick up the phone", "grey": "Not yet", "na": "Not applicable"}
+
+
 def money_bar(verdict):
-    return [{"key": l.key, "state": l.state, "title": f"{l.label}{': ' + l.note if l.note else ''}"} for l in verdict.lights]
+    return [{"key": l.key, "state": l.state, "label": l.label, "lines": [l.note] if l.note else [STATE_WORDS.get(l.state, "")],
+             "title": f"{l.label}{': ' + l.note if l.note else ''}"} for l in verdict.lights]
 
 
 @login_required

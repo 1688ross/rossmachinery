@@ -69,7 +69,7 @@
     <div class="kv"><span>Status</span><span>{{ f.status|cut:"_"|capfirst }}</span></div>
     <div class="kv"><span>Ready to close</span><span>{{ f.ready_to_close|yesno:"Yes,Not yet" }}</span></div>
     <p class="eyebrow mt">Money</p>
-    <span class="bar bar-lg">{% for q in mbar %}<span class="sq sq-{{ q.state }} sq-money" title="{{ q.title }}"></span>{% endfor %}</span>
+    <span class="bar bar-lg">{% for q in mbar %}<span class="sq sq-{{ q.state }} sq-money" tabindex="0" aria-label="{{ q.title }}"><span class="tip" role="tooltip"><b>{{ q.label }}</b>{% for l in q.lines %}<span>{{ l }}</span>{% endfor %}</span></span>{% endfor %}</span>
   </div>
 </section>
 
