@@ -1,0 +1,20 @@
+{
+ "name": "Ross Machinery Quote Generator",
+ "short_name": "RMS Quotes",
+ "start_url": "/",
+ "display": "standalone",
+ "background_color": "#f5f7fa",
+ "theme_color": "#003363",
+ "icons": [
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "favicon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml"
+  }
+ ]
+}
