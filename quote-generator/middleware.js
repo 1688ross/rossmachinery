@@ -2,7 +2,7 @@
 // Set QUOTE_PASSCODE in Vercel (Project → Settings → Environment Variables) and redeploy.
 // With no passcode set, the site is open. Changing the passcode signs everyone out.
 // A passcode shorter than 12 characters is refused (the site answers 503 until it is fixed).
-export const config = { matcher: '/:path*' };
+// No matcher: the gate runs on every path, including the home page.
 
 const COOKIE = 'rms_quotes';
 const OPEN_PATHS = new Set(['/favicon.svg', '/icon-512.png', '/manifest.webmanifest']);
@@ -77,9 +77,16 @@ function htmlResponse(body, status) {
 
 export default async function middleware(req) {
   const passcode = process.env.QUOTE_PASSCODE;
+  const url = new URL(req.url);
+  if (url.pathname === '/__gate') {
+    // Diagnostic: says whether the gate is active on this deployment. Reveals nothing secret.
+    const status = !passcode ? 'gate: off. QUOTE_PASSCODE is not set for this deployment (set it, then redeploy).'
+      : passcode.length < MIN_LEN ? 'gate: off. QUOTE_PASSCODE is shorter than ' + MIN_LEN + ' characters.'
+      : 'gate: on.';
+    return new Response(status, { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
+  }
   if (!passcode) return; // no passcode configured: serve the site as-is
   if (passcode.length < MIN_LEN) return htmlResponse(configPage(), 503);
-  const url = new URL(req.url);
   if (OPEN_PATHS.has(url.pathname)) return;
   if (url.pathname === '/unlock' && req.method !== 'POST') return redirect('/');
 

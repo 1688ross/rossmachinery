@@ -9,6 +9,8 @@
   {% if d.email_from %}<div class="kv"><span>Email</span><span>From {{ d.email_from }} · "{{ d.email_subject }}" · received {{ d.received_at|date:"M j, Y g:i a" }}</span></div>{% endif %}
   <div class="kv"><span>Filed by</span><span>{{ uploader.full_name|default:"system" }} · {{ d.uploaded_at|date:"M j, Y" }}</span></div>
   <div class="kv"><span>Marking</span><span>{{ d.control_marking|upper }}</span></div>
-  <div class="viewer-placeholder">Document viewer comes with the file store (plan task F5). The record, its proof links and its audit trail are live now.</div>
+  {% if proves or entries %}<div class="kv"><span>Proof for</span><span>{% for line, label, st in proves %}line {{ line.line_no|stringformat:"05d" }} {{ label|lower }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if proves and entries %}; {% endif %}{% for e in entries %}{{ e.kind|kind_label }} {{ e.reference }} ({{ e.signed_amount|signed }}){% if not forloop.last %}, {% endif %}{% endfor %}</span></div>{% endif %}
+  <div class="doc-actions">{% if on_disk %}<a class="btn btn-accent" href="{% url 'doc_file' d.id %}" target="_blank" rel="noopener">Open the file</a>{% else %}<span class="btn btn-disabled" title="Sample record only">File not in this server's store</span>{% endif %}</div>
+  {% if has_preview %}<img class="preview" src="{% url 'doc_preview' d.id %}" alt="First page of {{ d.title|default:d.original_filename }}">{% endif %}
 </section>
 {% endblock %}

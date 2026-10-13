@@ -136,3 +136,20 @@ every screen is reviewed against.
 - **Tammie closes the folders.** She is the sign-off on the close-out step. In the schema that is the
   manager role (close needs manager or above), which is how she is seeded.
 - **All users are US citizens and have been cleared with the client.** The export-control gating is a safety net, not a daily path. Each user still gets an attestation recorded in the system by an admin, so the record exists if anyone asks.
+
+## Update 2026-10-13
+
+- **Quote generator** is a standalone static site in its own repo (`1688ross/rms-quote-generator`) for
+  Vercel, with an office passcode gate. Interim only; the platform's quote form is the long-term home.
+- **Email intake, Ross's words: "you would be integrated into their email."** The plan stays: a reader on
+  the office server with read access to a mailbox, matching PO numbers, filing attachments, suggesting
+  facts for a person to confirm, quarantining anything that looks like a drawing or carries a marking.
+  Whether that reader is rules-only or also uses an AI model is an owner decision with a real trade-off:
+  anything a cloud model reads leaves the building. If a model is wanted, the safe shape is a local model
+  on the office server, or a cloud model that only ever sees text a local filter has already screened
+  (no attachments, no marked content), under a no-retention agreement. Not decided. Still unknown:
+  whether the office is on Microsoft 365 or Google Workspace.
+- **Built today:** document upload with the marking step and first-page previews, served from the
+  server's own store; a step page behind every square (mark done with a note or a document, raise a
+  yellow or red, okay it with a reason, post a fix, set aside as a client credit which posts a credit memo);
+  money reasons can be okayed for 30/60/90 days with the reason on record (migration 0003, `app.po_acks`).

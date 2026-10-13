@@ -186,14 +186,14 @@ BEGIN
   PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                      WHERE n.nspname = 'app' AND c.relkind = 'r' AND NOT (c.relrowsecurity AND c.relforcerowsecurity)) = 0,
                    'every table in schema app has RLS ENABLED and FORCED');
-  PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'app' AND c.relkind = 'r') = 16,
-                   'schema app has the 16 expected tables');
+  PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'app' AND c.relkind = 'r') = 18,
+                   'schema app has the 18 expected tables (16 in 0001, line_steps in 0002, po_acks in 0003)');
   PERFORM rt.check((SELECT count(*) FROM pg_constraint co
-                     WHERE co.contype = 'f' AND co.confrelid = 'app.purchase_orders'::regclass AND array_length(co.conkey, 1) = 2) = 7,
-                   'every folder child references purchase_orders through a composite (tenant_id, po_id) FK (7 FKs)');
+                     WHERE co.contype = 'f' AND co.confrelid = 'app.purchase_orders'::regclass AND array_length(co.conkey, 1) = 2) = 9,
+                   'every folder child references purchase_orders through a composite (tenant_id, po_id) FK (9 FKs)');
   PERFORM rt.check((SELECT count(*) FROM pg_constraint co
-                     WHERE co.contype = 'f' AND co.confrelid = 'app.documents'::regclass AND array_length(co.conkey, 1) = 2) = 4,
-                   'every document child references documents through a composite (tenant_id, document_id) FK (4 FKs)');
+                     WHERE co.contype = 'f' AND co.confrelid = 'app.documents'::regclass AND array_length(co.conkey, 1) = 2) = 6,
+                   'every document child references documents through a composite (tenant_id, document_id) FK (6 FKs)');
   PERFORM rt.check((SELECT count(*) FROM pg_constraint co JOIN pg_class c ON c.oid = co.conrelid JOIN pg_namespace n ON n.oid = c.relnamespace
                      WHERE n.nspname = 'app' AND co.contype = 'f' AND array_length(co.conkey, 1) = 1
                        AND co.confrelid NOT IN ('app.tenants'::regclass, 'app.users'::regclass)) = 0,
@@ -998,10 +998,18 @@ DECLARE
   t text;
   tables text[] := ARRAY['tenant_memberships', 'parties', 'purchase_orders', 'po_line_items', 'documents', 'document_pages',
                          'extraction_jobs', 'ledger_entries', 'po_notes', 'po_close_checklist_items', 'close_checklist_templates',
-                         'po_status_history', 'po_number_counters', 'audit_log'];
+                         'po_status_history', 'po_number_counters', 'audit_log', 'line_steps', 'po_acks'];
   n bigint; n_b bigint;
 BEGIN
   PERFORM rt.section('14. tenant isolation (Olivia, owner of A, against tenant B rows)');
+  -- fixtures for the 0002/0003 tables: one step and one ack on B's folder, made by B's owner
+  PERFORM rt.ctx('tb', 'bob');
+  INSERT INTO app.po_line_items (tenant_id, po_id, line_no, category, description, quantity, unit_price)
+    VALUES (rt.id('tb'), rt.id('po4'), 90, 'other', 'isolation fixture line', 1, 1)
+    ON CONFLICT DO NOTHING;
+  INSERT INTO app.line_steps (tenant_id, po_id, line_item_id, step_key)
+    SELECT tenant_id, po_id, id, 'shipped' FROM app.po_line_items WHERE po_id = rt.id('po4') AND line_no = 90;
+  INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (rt.id('tb'), rt.id('po4'), 'money:margin', 'okay', 'isolation fixture');
   FOREACH t IN ARRAY tables LOOP
     PERFORM rt.ctx('tb', 'bob');
     n_b := rt.count_of(format('SELECT count(*) FROM app.%I WHERE tenant_id = %L', t, rt.id('tb')));
@@ -1029,6 +1037,8 @@ BEGIN
   PERFORM rt.expect_error(format('INSERT INTO app.ledger_entries (tenant_id, po_id, kind, side, amount, counterparty_party_id) VALUES (%L, %L, ''client_invoice'', ''client'', 1, %L)', rt.id('tb'), rt.id('po4'), rt.id('c5')), ARRAY['42501', '23503'], 'ledger_entries');
   PERFORM rt.expect_error(format('INSERT INTO app.po_notes (tenant_id, po_id, body) VALUES (%L, %L, ''X'')', rt.id('tb'), rt.id('po4')), ARRAY['42501', '23503'], 'po_notes');
   PERFORM rt.expect_error(format('INSERT INTO app.po_close_checklist_items (tenant_id, po_id, item_key, label) VALUES (%L, %L, ''x_item'', ''X'')', rt.id('tb'), rt.id('po4')), ARRAY['42501', '23503'], 'po_close_checklist_items');
+  PERFORM rt.expect_error(format('INSERT INTO app.line_steps (tenant_id, po_id, line_item_id, step_key) VALUES (%L, %L, gen_random_uuid(), ''shipped'')', rt.id('tb'), rt.id('po4')), ARRAY['42501', '23503'], 'line_steps');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''money:margin'', ''okay'', ''not mine'')', rt.id('tb'), rt.id('po4')), ARRAY['42501', '23503'], 'po_acks');
   PERFORM rt.expect_error(format('INSERT INTO app.close_checklist_templates (tenant_id, item_key, label) VALUES (%L, ''x_item'', ''X'')', rt.id('tb')), ARRAY['42501'], 'close_checklist_templates');
   PERFORM rt.expect_error(format('INSERT INTO app.tenant_memberships (tenant_id, user_id, role) VALUES (%L, %L, ''clerk'')', rt.id('tb'), rt.id('olivia')), ARRAY['42501'], 'tenant_memberships');
   PERFORM rt.expect_error(format('INSERT INTO app.po_status_history (tenant_id, po_id, to_status) VALUES (%L, %L, ''open'')', rt.id('tb'), rt.id('po4')), ARRAY['42501'], 'po_status_history (no INSERT privilege at all)');
@@ -1062,7 +1072,7 @@ DO $$
 DECLARE t text; total bigint := 0; n bigint;
   tables text[] := ARRAY['tenants', 'users', 'tenant_memberships', 'parties', 'purchase_orders', 'po_line_items', 'documents',
                          'document_pages', 'extraction_jobs', 'ledger_entries', 'po_notes', 'po_close_checklist_items',
-                         'close_checklist_templates', 'po_status_history', 'po_number_counters', 'audit_log',
+                         'close_checklist_templates', 'po_status_history', 'po_number_counters', 'audit_log', 'line_steps', 'po_acks',
                          'po_balances', 'po_ledger', 'po_folder', 'current_documents'];
 BEGIN
   PERFORM rt.section('15. fail-closed after activity');
@@ -1072,7 +1082,7 @@ BEGIN
     IF n > 0 THEN PERFORM rt.fail(format('empty context: %s returned %s rows', t, n)); END IF;
     total := total + GREATEST(n, 0);
   END LOOP;
-  PERFORM rt.check(total = 0, 'empty context: every table and view (16 + 4) returns zero rows');
+  PERFORM rt.check(total = 0, 'empty context: every table and view (18 + 4) returns zero rows');
   PERFORM rt.check((SELECT count(*) FROM app.search_purchase_orders('VF-2')) = 0 AND (SELECT count(*) FROM app.my_tenants()) = 0, 'empty context: search and my_tenants return nothing');
   PERFORM rt.expect_error(format('INSERT INTO app.parties (tenant_id, name, is_client) VALUES (%L, ''X'', true)', rt.id('ta')), ARRAY['42501'], 'empty context: INSERT refused');
   PERFORM rt.expect_none_or_denied(format('UPDATE app.purchase_orders SET title = ''x'' WHERE tenant_id = %L', rt.id('ta')), 'empty context: UPDATE touches nothing');
@@ -1316,6 +1326,31 @@ BEGIN
                    'the app cannot read or advance the sequences) and no cluster-global counter (identity, xid) is exposed');
 END $$;
 SET ROLE app_user;
+
+-- =============================================================================
+-- §21b po_acks: acknowledgements are tenant-scoped, writer-only and append-only (0003)
+-- =============================================================================
+DO $$
+DECLARE v_po uuid;
+BEGIN
+  PERFORM rt.section('21b. po_acks (migration 0003)');
+  PERFORM rt.ctx('ta', 'olivia');
+  -- a fresh open folder in A (PO-00001 is closed by section 21)
+  INSERT INTO app.purchase_orders (tenant_id, client_party_id, title) VALUES (rt.id('ta'), rt.id('c1'), 'Ack test folder') RETURNING id INTO v_po;
+  INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (rt.id('ta'), v_po, 'money:margin', 'okay', 'vendor terms are net 60');
+  PERFORM rt.check((SELECT count(*) FROM app.po_acks WHERE po_id = v_po AND subject = 'money:margin') = 1, 'a writer can acknowledge a money reason on an open folder');
+  PERFORM rt.check((SELECT created_by FROM app.po_acks WHERE po_id = v_po AND subject = 'money:margin') = rt.id('olivia'), 'the ack is stamped with the acting user');
+  PERFORM rt.expect_error(format('UPDATE app.po_acks SET reason = ''changed'' WHERE po_id = %L', v_po), ARRAY['42501'], 'an ack cannot be edited (no UPDATE privilege)');
+  PERFORM rt.expect_error(format('DELETE FROM app.po_acks WHERE po_id = %L', v_po), ARRAY['42501'], 'an ack cannot be deleted (no DELETE privilege)');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''bogus subject'', ''okay'', ''x y z'')', rt.id('ta'), v_po), ARRAY['23514'], 'subject must name a money reason, a step or a note');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''money:margin'', ''credit'', ''no entry'')', rt.id('ta'), v_po), ARRAY['23514'], 'a credit ack must point at the credit memo it posted');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason, ledger_entry_id) VALUES (%L, %L, ''money:margin'', ''credit'', ''wrong folder'', %L)', rt.id('ta'), v_po, gen_random_uuid()), ARRAY['23503'], 'a credit ack cannot point at a ledger entry that is not on this folder');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''money:margin'', ''okay'', ''too short reason?'')', rt.id('ta'), gen_random_uuid()), ARRAY['23503', '42501', 'P0002'], 'an ack needs a real, visible folder');
+  PERFORM rt.ctx('ta', 'vera');
+  PERFORM rt.check((SELECT count(*) FROM app.po_acks WHERE po_id = v_po) = 1, 'a viewer can read acknowledgements');
+  PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''money:margin'', ''okay'', ''viewer says so'')', rt.id('ta'), v_po), ARRAY['42501'], 'a viewer cannot acknowledge anything');
+  -- (no non-US fixture found)
+END $$;
 
 -- =============================================================================
 -- §22 summary

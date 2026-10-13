@@ -96,5 +96,10 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "branding"]
 
+# Where filed documents live on this server. Content-addressed; never served as static files.
+DOCUMENT_ROOT = os.environ.get("RMS_DOCUMENT_ROOT", str(BASE_DIR / "var" / "documents"))
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26 * 1024 * 1024
+
 # The single tenant this installation serves (instance-per-tenant). Set at provisioning.
 TENANT_SLUG = os.environ.get("RMS_TENANT_SLUG", "rms")

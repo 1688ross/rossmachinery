@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}Okay · {{ f.client_order_number|default:f.po_number }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'po_detail' f.po_id %}">&larr; {{ f.client_order_number|default:f.po_number }}</a>
+<div class="panel-head"><div><p class="eyebrow">{{ f.client_name }} · {{ f.po_number }}</p><h1 class="display">Okay it</h1></div></div>
+<section class="reasons reasons-{{ state }}"><p class="reason reason-{{ state }}"><span class="dot"></span>{{ reason_text }}</p></section>
+{% if errors %}<section class="reasons reasons-red">{% for e in errors %}<p class="reason reason-red"><span class="dot"></span>{{ e }}</p>{% endfor %}</section>{% endif %}
+<form method="post" class="card action action-okay okay-form">{% csrf_token %}
+  <p class="muted small">{% if is_note %}The note is marked resolved and comes off the board. Say why.{% else %}The light goes grey and this comes off the board for a while. Say why, so the next person knows.{% endif %}</p>
+  <textarea name="text" rows="3" placeholder="Net 60 terms with this customer; payment is not late yet.">{{ text }}</textarea>
+  {% if not is_note %}<label>Bring it back after<select name="period">{% for v, lbl in periods %}<option value="{{ v }}">{{ lbl }}</option>{% endfor %}</select></label>{% endif %}
+  <div class="form-actions"><a class="btn btn-ghost-dark" href="{% url 'po_detail' f.po_id %}">Cancel</a>&nbsp;&nbsp;<button class="btn btn-accent" type="submit">Okay it</button></div>
+</form>
+{% endblock %}

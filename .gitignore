@@ -41,3 +41,6 @@ pgdata/
 staticfiles/
 db.sqlite3
 *.pyc
+
+# filed documents (dev); the office server sets RMS_DOCUMENT_ROOT
+var/

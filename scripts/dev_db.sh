@@ -13,4 +13,5 @@ psql -v ON_ERROR_STOP=1 -q -d "$DB" -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FR
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/fixtures/seed_dev.sql"
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/schema/migrations/0002_fulfillment_and_sources.sql"
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/fixtures/seed_dev_0002.sql"
-echo "== $DB ready (schema 0001 + 0002, synthetic seed)"
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$HERE/schema/migrations/0003_acks_and_previews.sql"
+echo "== $DB ready (schema 0001 + 0002 + 0003, synthetic seed)"

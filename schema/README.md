@@ -8,8 +8,8 @@ tenant, gated by export control, with an append-only ledger and an append-only a
 | path | what |
 |---|---|
 | `migrations/0001_init.sql` | the whole Phase 1 schema: roles, enums, tables, triggers, views, RLS policies, grants (one transaction, ~2 800 lines, 16 sections) |
-| `tests/rls_tests.sql` | self-checking suite, 418 assertions (incl. one regression per red-team round-1 break), runs as the application role; every check prints `PASS:` or aborts |
-| `tests/run_tests.sh` | CI gate: fresh database, apply migration, run suite, non-zero exit on failure |
+| `tests/rls_tests.sql` | self-checking suite, 436 assertions (incl. one regression per red-team round-1 break), runs as the application role; every check prints `PASS:` or aborts |
+| `tests/run_tests.sh` | CI gate: fresh database, apply migrations 0001 to 0003 in order, run suite, non-zero exit on failure |
 | `supabase/0002_supabase.sql` | the Supabase adaptation (two functions + one grant); not applied by `run_tests.sh` |
 | `tests/supabase_stub_check.sh` | proves `0002_supabase.sql` parses and behaves against a stub `auth` schema on plain Postgres |
 
@@ -19,7 +19,7 @@ Supabase itself has not been exercised; see [Supabase adaptation](#supabase-adap
 ## 1. Apply and test
 
 ```bash
-# fresh database + migration + 418 checks; exits non-zero on any failure
+# fresh database + migrations + 436 checks; exits non-zero on any failure
 PGHOST=127.0.0.1 PGPORT=5432 PGUSER=postgres PGPASSWORD=... tests/run_tests.sh po_schema_test
 
 # apply to a real database (as a superuser; the script SET ROLEs to app_owner itself)

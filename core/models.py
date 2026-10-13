@@ -152,6 +152,8 @@ class Document(models.Model):
     title = models.TextField(null=True)
     original_filename = models.TextField(null=True)
     storage_key = models.TextField()
+    sha256 = models.TextField()
+    thumbnail_key = models.TextField(null=True)
     mime_type = models.TextField()
     byte_size = models.BigIntegerField()
     page_count = models.IntegerField(null=True)
@@ -180,6 +182,7 @@ class LineStep(models.Model):
     owner_user_id = models.UUIDField(null=True)
     due_date = models.DateField(null=True)
     done_at = models.DateTimeField(null=True)
+    done_by = models.UUIDField(null=True)
     flag = models.TextField(null=True)
     flag_reason = models.TextField(null=True)
     proof_document_id = models.UUIDField(null=True)
@@ -199,3 +202,23 @@ class Member(models.Model):
     class Meta:
         managed = False
         db_table = 'app"."users'
+
+
+class Ack(models.Model):
+    """Someone dealt with a yellow or red: okayed it, fixed it, or set it aside as a client
+    credit (migration 0003). Append-only."""
+    id = models.UUIDField(primary_key=True)
+    tenant_id = models.UUIDField()
+    po_id = models.UUIDField()
+    subject = models.TextField()      # money:<key> | step:<line_step id> | note:<note id>
+    action = models.TextField()       # okay | fix | credit
+    reason = models.TextField()
+    ledger_entry_id = models.UUIDField(null=True)
+    document_id = models.UUIDField(null=True)
+    expires_on = models.DateField(null=True)
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'app"."po_acks'

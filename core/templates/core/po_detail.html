@@ -10,9 +10,10 @@
   <span class="beacon beacon-{{ overall }} beacon-lg"></span>
 </div>
 
-{% if reasons %}
+{% if reasons or acked %}
 <section class="reasons reasons-{{ overall }}">
-  {% for state, text in reasons %}<p class="reason reason-{{ state }}"><span class="dot"></span>{{ text }}</p>{% endfor %}
+  {% for state, text, key in reasons %}<p class="reason reason-{{ state }}"><span class="dot"></span><span class="reason-text">{{ text }}</span>{% if key|slice:":5" == "step:" %}<a class="act" href="{% url 'step_action' f.po_id key|slice:"5:" %}">Deal with it</a>{% elif f.status != 'closed' %}<a class="act" href="{% url 'okay_reason' f.po_id key %}">Okay it</a>{% endif %}</p>{% endfor %}
+  {% for text, a, who in acked %}<p class="reason reason-grey"><span class="dot"></span><span class="reason-text"><span class="muted">{{ text }}</span><br><b>Okayed</b> by {{ who.full_name|default:"someone" }} on {{ a.created_at|date:"M j" }}{% if a.expires_on %}, until {{ a.expires_on|date:"M j" }}{% endif %}: {{ a.reason }}</span></p>{% endfor %}
 </section>
 {% endif %}
 
@@ -23,18 +24,20 @@
 
 {% if tab == 'documents' %}
 <section class="card">
+  <div class="card-head"><p class="muted small">Everything filed to this folder. Proof links on the squares point here.</p>{% if f.status != 'closed' %}<a class="btn btn-accent" href="{% url 'doc_upload' f.po_id %}">File a document</a>{% endif %}</div>
   <table class="table docs">
-    <tr class="th"><td>Date</td><td>Document</td><td>Type</td><td>Source</td><td>Filed by</td><td></td></tr>
+    <tr class="th"><td></td><td>Date</td><td>Document</td><td>Type</td><td>Source</td><td>Filed by</td><td></td></tr>
     {% for d in docs %}
     <tr>
+      <td class="thumb-cell"><a href="{% url 'doc_detail' d.id %}">{% if d.thumbnail_key %}<img class="thumb" src="{% url 'doc_preview' d.id %}" alt="">{% else %}<span class="thumb thumb-empty" title="No preview: the file is not in this server's store">{{ d.mime_type|mime_short }}</span>{% endif %}</a></td>
       <td class="mono">{{ d.document_date|date:"m/d/y" }}</td>
-      <td><a href="{% url 'doc_detail' d.id %}">{{ d.title|default:d.original_filename }}</a>{% if d.email_subject %}<div class="muted small">{{ d.email_from }} · "{{ d.email_subject }}"</div>{% endif %}</td>
+      <td><a href="{% url 'doc_detail' d.id %}">{{ d.title|default:d.original_filename }}</a>{% if d.email_subject %}<div class="muted small">{{ d.email_from }} · "{{ d.email_subject }}"</div>{% endif %}{% if d.control_marking != 'none' %} <span class="pill pill-red">{{ d.control_marking|upper }}</span>{% endif %}</td>
       <td>{{ d.kind|nice }}</td>
       <td>{{ d.source|capfirst }}</td>
       <td>{{ d.uploader.full_name|default:"system" }}</td>
       <td class="mono muted">{{ d.page_count|default:"" }}{% if d.page_count %} p{% endif %}</td>
     </tr>
-    {% empty %}<tr><td colspan="6" class="muted">No documents filed yet.</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="7" class="muted">No documents filed yet.</td></tr>{% endfor %}
   </table>
 </section>
 {% else %}
@@ -83,8 +86,7 @@
       <td>{{ l.description }}<div class="muted small">{{ l.category }} · {{ l.quantity|floatformat:0 }} × {{ l.unit_price|signed }}</div></td>
       {% for q in l.squares %}
       <td class="step-cell">
-        {% if q.doc %}<a href="{% url 'doc_detail' q.doc.id %}" class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></a>
-        {% else %}<span class="sq sq-lg sq-{{ q.state }}" title="{{ q.title }}"></span>{% endif %}
+        {% if q.state == 'na' %}<span class="sq sq-lg sq-na" aria-label="{{ q.title }}"><span class="tip" role="tooltip"><b>{{ q.label }}</b><span>Not applicable</span></span></span>{% else %}<a href="{% url 'step_action' f.po_id q.step.id %}" class="sq sq-lg sq-{{ q.state }}" aria-label="{{ q.title }}"><span class="tip" role="tooltip"><b>{{ q.label }}</b><span>{{ q.title }}</span>{% if q.acks %}<span>{{ q.acks|length }} note{{ q.acks|length|pluralize }} on record</span>{% endif %}</span></a>{% endif %}
         <div class="step-meta">{% if q.step.done_at %}{{ q.step.done_at|date:"n/j" }}{% elif q.step.due_date %}<span class="muted">due {{ q.step.due_date|date:"n/j" }}</span>{% endif %}{% if q.doc %}<a class="proof" href="{% url 'doc_detail' q.doc.id %}">proof</a>{% elif q.step.proof_note %}<span class="proof-note" title="{{ q.step.proof_note }}">note</span>{% endif %}</div>
       </td>
       {% endfor %}

@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% block title %}File a document · {{ f.client_order_number|default:f.po_number }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'po_detail' f.po_id %}?tab=documents">&larr; {{ f.client_order_number|default:f.po_number }} documents</a>
+<div class="panel-head"><div><p class="eyebrow">{{ f.client_name }} · {{ f.po_number }}</p><h1 class="display">File a document</h1></div></div>
+{% if errors %}<section class="reasons reasons-red">{% for e in errors %}<p class="reason reason-red"><span class="dot"></span>{{ e }}</p>{% endfor %}</section>{% endif %}
+<form method="post" enctype="multipart/form-data" class="qform">{% csrf_token %}
+  <section class="card">
+    <h2>The file</h2>
+    <div class="f-grid">
+      <label class="span2">PDF, PNG or JPEG, up to 25 MB<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></label>
+      <label>What it is<select name="kind" required><option value="">Choose…</option>{% for k, lbl in kinds %}<option value="{{ k }}" {% if form.kind == k %}selected{% endif %}>{{ lbl }}</option>{% endfor %}</select></label>
+      <label>Date on the document <span class="muted">(optional)</span><input type="date" name="document_date" value="{{ form.document_date }}"></label>
+      <label class="span2">Title <span class="muted">(optional; the filename otherwise)</span><input name="title" value="{{ form.title }}" placeholder="Bluewater BOL 44120"></label>
+    </div>
+  </section>
+  <section class="card marking">
+    <h2>Before it is filed</h2>
+    <label class="check"><input type="checkbox" name="attest" required> I looked at this document. It is not a drawing, schematic or blueprint, and I checked it for export-control markings.</label>
+    <div class="f-grid">
+      <label>Marking on the document<select name="marking">{% for k, lbl in markings %}<option value="{{ k }}" {% if form.marking == k %}selected{% endif %}>{{ lbl }}</option>{% endfor %}</select></label>
+      <p class="muted small span2">Drawings, schematics and blueprints never go in the system. A document with an ITAR, EAR, CUI or FCI legend is filed with that marking and only people cleared for it can open it.</p>
+    </div>
+  </section>
+  <section class="card">
+    <h2>What it proves <span class="muted">(optional)</span></h2>
+    <div class="f-grid">
+      <label class="span2">This document is proof for<select name="step"><option value="">Nothing in particular</option>{% for v, lbl, st in choices %}<option value="{{ v }}" {% if form.step == v %}selected{% endif %}>{{ lbl }}{% if st.done_at %} (done){% endif %}</option>{% endfor %}</select></label>
+      <label class="check span2"><input type="checkbox" name="mark_done" {% if form.mark_done %}checked{% endif %}> Mark that step done with this as proof</label>
+      <label class="span2">Note <span class="muted">(optional, shows under the square)</span><input name="note" value="{{ form.note }}" placeholder="Signed by receiving 9/16"></label>
+    </div>
+  </section>
+  <div class="form-actions"><a class="btn btn-ghost-dark" href="{% url 'po_detail' f.po_id %}?tab=documents">Cancel</a>&nbsp;&nbsp;<button class="btn btn-accent" type="submit">File it</button></div>
+</form>
+{% endblock %}

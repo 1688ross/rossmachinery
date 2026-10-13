@@ -21,7 +21,7 @@ export PGUSER="${PGUSER:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MIGRATION="$HERE/../migrations/0001_init.sql"
+MIGRATIONS=("$HERE/../migrations/0001_init.sql" "$HERE/../migrations/0002_fulfillment_and_sources.sql" "$HERE/../migrations/0003_acks_and_previews.sql")
 SUITE="$HERE/rls_tests.sql"
 LOG="${RLS_TEST_LOG:-$(mktemp -t rls_tests.XXXXXX.log)}"
 
@@ -36,8 +36,10 @@ echo "== recreating database $DB"
 dropdb --if-exists "$DB"
 createdb "$DB"
 
-echo "== applying $MIGRATION"
-psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$MIGRATION"
+for m in "${MIGRATIONS[@]}"; do
+  echo "== applying $m"
+  psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$m"
+done
 
 echo "== running $SUITE (log: $LOG)"
 set +e

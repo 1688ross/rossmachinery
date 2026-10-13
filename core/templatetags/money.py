@@ -32,3 +32,8 @@ def kind_label(kind):
 def nice(value):
     """snake_case -> Sentence case."""
     return str(value).replace("_", " ").capitalize()
+
+
+@register.filter
+def mime_short(m):
+    return {"application/pdf": "PDF", "image/png": "PNG", "image/jpeg": "JPG"}.get(m or "", "FILE")

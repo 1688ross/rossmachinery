@@ -1,10 +1,26 @@
+import datetime
+import re
 from collections import defaultdict
+from decimal import Decimal, InvalidOperation
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.db import DatabaseError, IntegrityError, transaction
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
 
+from . import db, storage
 from .lights import judge
-from .models import ChecklistItem, Document, Folder, LedgerEntry, LineItem, LineStep, Member, Note, Party
+from .models import Ack, ChecklistItem, Document, Folder, LedgerEntry, LineItem, LineStep, Member, Note, Party
 from .steps import STEPS, LABEL, ORDER as STEP_ORDER, square, squares_for_line, worst
+
+DOC_KINDS = [("client_po", "Client purchase order"), ("client_invoice", "Our invoice to the client"),
+             ("vendor_invoice", "Vendor invoice"), ("remittance", "Remittance or payment advice"),
+             ("packing_slip", "Packing slip or bill of lading"), ("freight_bill", "Freight bill"),
+             ("commission_statement", "Commission statement"), ("quote", "Quote"),
+             ("correspondence", "Correspondence or order confirmation"), ("other", "Something else")]
+MARKINGS = [("none", "None"), ("fci", "FCI"), ("cui", "CUI"), ("itar", "ITAR"), ("ear", "EAR")]
+OKAY_PERIODS = [("30", "30 days"), ("60", "60 days"), ("90", "90 days"), ("", "until the folder closes")]
 
 ORDER = {"red": 0, "yellow": 1, "green": 2, "grey": 3}
 
@@ -25,6 +41,17 @@ def _steps_by_po(po_ids):
 
 def _members():
     return {m.id: m for m in Member.objects.all()}
+
+
+def _acks_by_po(po_ids):
+    out = defaultdict(list)
+    for a in Ack.objects.filter(po_id__in=po_ids).order_by("created_at"):
+        out[a.po_id].append(a)
+    return out
+
+
+def _ctx_or_403(request):
+    return None if request.app_ctx else render(request, "core/no_context.html", status=403)
 
 
 def fulfillment_bar(steps, members, lines_by_id=None):
@@ -82,10 +109,11 @@ def panel(request):
     folders = list(qs.order_by("-opened_at"))
     ids = [f.po_id for f in folders]
     notes, steps, members = _notes_by_po(ids), _steps_by_po(ids), _members()
+    acks = _acks_by_po(ids)
     lines_by_id = {l.id: l for l in LineItem.objects.filter(po_id__in=ids)}
     rows = []
     for f in folders:
-        v = judge(f, notes.get(f.po_id, []))
+        v = judge(f, notes.get(f.po_id, []), acks=acks.get(f.po_id, []))
         fbar, waiting = fulfillment_bar(steps.get(f.po_id, []), members, lines_by_id)
         overall = worst([v.overall] + [q["state"] for q in fbar])
         if f.status == "closed":
@@ -109,8 +137,15 @@ def po_detail(request, po_id):
         return render(request, "core/no_context.html", status=403)
     f = get_object_or_404(Folder, po_id=po_id)
     notes = list(Note.objects.filter(po_id=po_id).order_by("created_at"))
-    v = judge(f, notes)
+    acks = list(Ack.objects.filter(po_id=po_id).order_by("created_at"))
+    v = judge(f, notes, acks=acks)
     members = _members()
+    for a in acks:
+        a.who = members.get(a.created_by)
+    step_acks = defaultdict(list)
+    for a in acks:
+        if a.subject.startswith("step:"):
+            step_acks[a.subject[5:]].append(a)
     parties = {p.id: p for p in Party.objects.all()}
     docs = {d.id: d for d in Document.objects.filter(po_id=po_id, deleted_at__isnull=True)}
     entries = list(LedgerEntry.objects.filter(po_id=po_id).order_by("entry_date", "created_at"))
@@ -139,13 +174,15 @@ def po_detail(request, po_id):
     for l in lines:
         for q in l.squares:
             if q["state"] in ("yellow", "red") and q["step"].flag:
-                reasons.append((q["state"], f"Line {l.line_no:05d} {q['label'].lower()}: {q['step'].flag_reason}"))
+                reasons.append((q["state"], f"Line {l.line_no:05d} {q['label'].lower()}: {q['step'].flag_reason}", f"step:{q['step'].id}"))
             elif q["state"] == "yellow":
-                reasons.append(("yellow", f"Line {l.line_no:05d}: {q['title']}."))
+                reasons.append(("yellow", f"Line {l.line_no:05d}: {q['title']}.", f"step:{q['step'].id}"))
+            q["acks"] = step_acks.get(str(q["step"].id), [])
     reasons.sort(key=lambda r: ORDER[r[0]])
+    acked = [(text, a, members.get(a.created_by)) for text, a in v.acked]
     overall = worst([v.overall] + [q["state"] for q in fbar]) if f.status != "closed" else "green"
     return render(request, "core/po_detail.html", {
-        "f": f, "v": v, "overall": overall, "reasons": reasons, "notes": notes, "lines": lines, "checklist": checklist,
+        "f": f, "v": v, "overall": overall, "reasons": reasons, "acked": acked, "notes": notes, "lines": lines, "checklist": checklist,
         "client_entries": client_entries, "vendor_entries": vendor_entries, "docs": doc_list,
         "fbar": fbar, "mbar": money_bar(v), "tab": request.GET.get("tab", "folder"), "step_labels": STEPS,
     })
@@ -158,4 +195,265 @@ def doc_detail(request, doc_id):
     d = get_object_or_404(Document, id=doc_id, deleted_at__isnull=True)
     f = Folder.objects.filter(po_id=d.po_id).first() if d.po_id else None
     uploader = Member.objects.filter(id=d.uploaded_by).first()
-    return render(request, "core/doc_detail.html", {"d": d, "f": f, "uploader": uploader})
+    lines = {l.id: l for l in LineItem.objects.filter(po_id=d.po_id)} if d.po_id else {}
+    proves = [(lines.get(st.line_item_id), LABEL.get(st.step_key, st.step_key), st) for st in LineStep.objects.filter(proof_document_id=d.id)]
+    entries = list(LedgerEntry.objects.filter(document_id=d.id).order_by("entry_date"))
+    on_disk = storage.open_file(d.storage_key) if storage.KEY_RE.match(d.storage_key or "") else None
+    if on_disk:
+        on_disk.close()
+    return render(request, "core/doc_detail.html", {"d": d, "f": f, "uploader": uploader, "proves": proves, "entries": entries,
+                                                    "on_disk": bool(on_disk), "has_preview": bool(d.thumbnail_key)})
+
+
+def _send(request, d, key, mime, download_name):
+    fh = storage.open_file(key) if key and storage.KEY_RE.match(key) else None
+    if fh is None:
+        raise Http404("That file is not in the document store on this server.")
+    resp = FileResponse(fh, content_type=mime)
+    resp["Content-Disposition"] = 'inline; filename="%s"' % re.sub(r"[^A-Za-z0-9._ -]+", "_", download_name)[:120]
+    resp["X-Content-Type-Options"] = "nosniff"
+    resp["Content-Security-Policy"] = "default-src 'none'; sandbox"
+    resp["Cache-Control"] = "private, max-age=600"
+    return resp
+
+
+@login_required
+def doc_file(request, doc_id):
+    if not request.app_ctx:
+        return render(request, "core/no_context.html", status=403)
+    d = get_object_or_404(Document, id=doc_id, deleted_at__isnull=True)   # RLS decides what is visible
+    return _send(request, d, d.storage_key, d.mime_type, d.original_filename or f"{d.id}.pdf")
+
+
+@login_required
+def doc_preview(request, doc_id):
+    if not request.app_ctx:
+        return render(request, "core/no_context.html", status=403)
+    d = get_object_or_404(Document, id=doc_id, deleted_at__isnull=True)
+    return _send(request, d, d.thumbnail_key, "image/png", f"{d.id}-page1.png")
+
+
+def _step_choices(po_id):
+    lines = list(LineItem.objects.filter(po_id=po_id).order_by("line_no"))
+    steps = list(LineStep.objects.filter(po_id=po_id))
+    out = []
+    for l in lines:
+        for st in sorted((x for x in steps if x.line_item_id == l.id and x.applicable), key=lambda x: STEP_ORDER.get(x.step_key, 99)):
+            out.append((str(st.id), f"{l.line_no:05d} {l.description[:38]} · {LABEL.get(st.step_key, st.step_key)}", st))
+    return out
+
+
+def _parse_date(text):
+    try:
+        return datetime.date.fromisoformat(text) if text else None
+    except ValueError:
+        return None
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def doc_upload(request, po_id):
+    if not request.app_ctx:
+        return render(request, "core/no_context.html", status=403)
+    f = get_object_or_404(Folder, po_id=po_id)
+    choices = _step_choices(po_id)
+    if request.method == "POST" and int(request.META.get("CONTENT_LENGTH") or 0) > storage.MAX_BYTES + 256 * 1024:
+        # Refuse before Django parses the body, so an oversized upload never spools to disk.
+        return render(request, "core/doc_upload.html", {"f": f, "form": {"marking": "none", "mark_done": True}, "kinds": DOC_KINDS,
+                                                        "markings": MARKINGS, "choices": choices,
+                                                        "errors": ["That file is over 25 MB. Scan it at a lower resolution or split it."]})
+    form = {"kind": request.POST.get("kind", request.GET.get("kind", "")), "marking": request.POST.get("marking", "none"),
+            "title": request.POST.get("title", ""), "document_date": request.POST.get("document_date", ""),
+            "note": request.POST.get("note", ""), "step": request.POST.get("step", request.GET.get("step", "")),
+            "mark_done": request.POST.get("mark_done", "on" if request.method == "GET" else "") == "on"}
+    errors = []
+    if request.method == "POST":
+        if f.status == "closed":
+            errors.append("This folder is closed. Reopen it before filing documents.")
+        up = request.FILES.get("file")
+        if not up:
+            errors.append("Choose a file.")
+        elif up.size > storage.MAX_BYTES:
+            errors.append("That file is over 25 MB. Scan it at a lower resolution or split it.")
+        if form["kind"] not in dict(DOC_KINDS):
+            errors.append("Say what the document is.")
+        if form["marking"] not in dict(MARKINGS):
+            errors.append("Pick a marking.")
+        if request.POST.get("attest") != "on":
+            errors.append("Confirm that you looked at the document and it is not a drawing, schematic or blueprint.")
+        if form["document_date"] and _parse_date(form["document_date"]) is None:
+            errors.append("The document date is not a real date.")
+        if form["step"] and form["step"] not in {c[0] for c in choices}:
+            errors.append("That step is not on this folder.")
+        if not errors:
+            try:
+                data = up.read()
+                key, sha, mime, ext = storage.identify(request.app_ctx["tenant_id"], data)
+                title = form["title"].strip()[:200] or up.name[:200]
+                existing = Document.objects.filter(storage_key=key).first()   # what this person is allowed to see
+                if existing is not None and existing.deleted_at is None and str(existing.po_id) == str(po_id):
+                    with transaction.atomic():
+                        if form["step"]:
+                            db.set_step_proof(form["step"], doc_id=existing.id, note=form["note"], mark_done=form["mark_done"])
+                    messages.info(request, "Those exact bytes were already filed here as \"%s\"." % (existing.title or existing.original_filename)
+                                  + (" They are attached to the step as proof." if form["step"] else ""))
+                    return redirect(f"/po/{po_id}/?tab=documents")
+                if existing is not None:
+                    where = "another folder" if str(existing.po_id) != str(po_id) else "this folder, then removed"
+                    errors.append("That exact file is already filed in %s as \"%s\". File a scan with a date or stamp on it instead of the same bytes twice." % (where, existing.title or existing.original_filename))
+                else:
+                    # Row first (the database decides whether this person may file it), then bytes, then
+                    # the preview; a refusal at any point rolls the row back and leaves no file behind.
+                    with transaction.atomic():
+                        doc_id = db.insert_document(request.app_ctx["tenant_id"], str(po_id), form["kind"], form["marking"], title,
+                                                    up.name[:200], key, sha, mime, len(data), None, form["document_date"] or None, None)
+                        storage.store(key, data)
+                        try:
+                            thumb_key, pages = storage.render_first_page(key, mime)
+                            if thumb_key or pages:
+                                db.set_document_thumbnail(doc_id, thumb_key, pages)
+                            if form["step"]:
+                                db.set_step_proof(form["step"], doc_id=doc_id, note=form["note"], mark_done=form["mark_done"])
+                        except Exception:
+                            storage.remove(key)
+                            raise
+                    messages.success(request, f"Filed {title}." + (" The step is marked done with it as proof." if form["step"] and form["mark_done"] else ""))
+                    return redirect(f"/po/{po_id}/?tab=documents")
+            except storage.RejectedFile as e:
+                errors.append(str(e))
+            except IntegrityError:
+                errors.append("That exact file is already filed somewhere this account cannot see, so it cannot be filed again here.")
+            except DatabaseError as e:
+                errors.append("The database refused it: " + str(e).split("\n")[0])
+    return render(request, "core/doc_upload.html", {"f": f, "form": form, "errors": errors, "kinds": DOC_KINDS, "markings": MARKINGS,
+                                                    "choices": choices})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def step_action(request, po_id, step_id):
+    if not request.app_ctx:
+        return render(request, "core/no_context.html", status=403)
+    f = get_object_or_404(Folder, po_id=po_id)
+    st = get_object_or_404(LineStep, id=step_id, po_id=po_id)
+    line = get_object_or_404(LineItem, id=st.line_item_id)
+    if not st.applicable:
+        messages.info(request, f"{LABEL.get(st.step_key, st.step_key)} does not apply to line {line.line_no:05d}.")
+        return redirect(f"/po/{po_id}/")
+    members = _members()
+    state, title = square(st, None, line)
+    label = LABEL.get(st.step_key, st.step_key)
+    acks = list(Ack.objects.filter(po_id=po_id, subject=f"step:{st.id}").order_by("-created_at"))
+    for a in acks:
+        a.who = members.get(a.created_by)
+    doc = Document.objects.filter(id=st.proof_document_id, deleted_at__isnull=True).first() if st.proof_document_id else None
+    errors, action = [], request.POST.get("action", "")
+    if request.method == "POST":
+        text = request.POST.get("text", "").strip()
+        tenant = request.app_ctx["tenant_id"]
+        try:
+          with transaction.atomic():
+              if f.status == "closed":
+                  errors.append("This folder is closed.")
+              elif action == "done":
+                  if len(text) < 3:
+                      errors.append("Say what shows this step is done (a note, or upload a document instead).")
+                  else:
+                      db.set_step_proof(st.id, note=text, mark_done=True)
+                      messages.success(request, f"Line {line.line_no:05d} {label.lower()} marked done.")
+              elif action == "flag":
+                  colour = request.POST.get("flag", "")
+                  if colour not in ("yellow", "red"):
+                      errors.append("Pick yellow or red.")
+                  elif len(text) < 3:
+                      errors.append("Say what the problem is.")
+                  else:
+                      db.set_step_flag(st.id, colour, text)
+                      messages.success(request, f"Line {line.line_no:05d} {label.lower()} flagged {colour}.")
+              elif action == "okay":
+                  if len(text) < 3:
+                      errors.append("Say why it is fine.")
+                  else:
+                      db.clear_step_flag(st.id)
+                      db.insert_ack(tenant, str(po_id), f"step:{st.id}", "okay", text)
+                      messages.success(request, f"Okayed line {line.line_no:05d} {label.lower()}.")
+              elif action == "fix":
+                  if len(text) < 3:
+                      errors.append("Say what was done.")
+                  else:
+                      db.clear_step_flag(st.id)
+                      if request.POST.get("mark_done") == "on":
+                          db.set_step_proof(st.id, note=text, mark_done=True)
+                      db.insert_ack(tenant, str(po_id), f"step:{st.id}", "fix", text)
+                      messages.success(request, f"Fix posted on line {line.line_no:05d} {label.lower()}.")
+              elif action == "credit":
+                  try:
+                      amount = Decimal(request.POST.get("amount", "").replace(",", "").replace("$", "").strip())
+                      if not amount.is_finite():
+                          raise InvalidOperation
+                      amount = amount.quantize(Decimal("0.01"))
+                  except InvalidOperation:
+                      amount = Decimal("0")
+                  if amount <= 0:
+                      errors.append("Enter the credit amount.")
+                  elif len(text) < 3:
+                      errors.append("Say what the credit is for; it prints on the ledger.")
+                  else:
+                      ref = f"Credit · line {line.line_no:05d} {label.lower()}"
+                      entry_id = db.insert_credit_memo(tenant, str(po_id), amount, text, ref, doc.id if doc else None)
+                      db.clear_step_flag(st.id)
+                      db.insert_ack(tenant, str(po_id), f"step:{st.id}", "credit", text, ledger_entry_id=entry_id)
+                      messages.success(request, f"Client credit of ${amount:,.2f} posted and the flag cleared.")
+              else:
+                  errors.append("Unknown action.")
+        except DatabaseError as e:
+            errors.append("The database refused it: " + str(e).split("\n")[0])
+        if not errors:
+            return redirect(f"/po/{po_id}/")
+    return render(request, "core/step_action.html", {"f": f, "st": st, "line": line, "state": state, "title": title, "label": label,
+                                                     "owner": members.get(st.owner_user_id), "doc": doc, "acks": acks, "errors": errors,
+                                                     "action": action, "text": request.POST.get("text", "")})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def okay_reason(request, po_id, key):
+    """Okay a money reason (grey until it expires) or resolve a sticky note."""
+    if not request.app_ctx:
+        return render(request, "core/no_context.html", status=403)
+    f = get_object_or_404(Folder, po_id=po_id)
+    notes = list(Note.objects.filter(po_id=po_id).order_by("created_at"))
+    acks = list(Ack.objects.filter(po_id=po_id).order_by("created_at"))
+    v = judge(f, notes, acks=acks)
+    match = next((r for r in v.reasons if r[2] == key), None)
+    if match is None:
+        messages.info(request, "That item is no longer open.")
+        return redirect(f"/po/{po_id}/")
+    is_note = key.startswith("note_")
+    errors = []
+    if request.method == "POST":
+        text = request.POST.get("text", "").strip()
+        period = request.POST.get("period", "30")
+        if len(text) < 3:
+            errors.append("Say why it is fine. The next person will read it.")
+        elif period not in dict(OKAY_PERIODS):
+            errors.append("Pick when it should come back.")
+        else:
+            try:
+                with transaction.atomic():
+                    if is_note:
+                        note = next((n for n in notes if str(n.id).replace("-", "") == key[5:]), None)
+                        if note is None or db.resolve_note(note.id) is None:
+                            errors.append("That note could not be resolved from this account. Its author or a manager can.")
+                        else:
+                            db.insert_ack(request.app_ctx["tenant_id"], str(po_id), f"note:{note.id}", "okay", text)
+                    else:
+                        expires = (datetime.date.today() + datetime.timedelta(days=int(period))) if period else None
+                        db.insert_ack(request.app_ctx["tenant_id"], str(po_id), f"money:{key}", "okay", text, expires_on=expires)
+            except DatabaseError as e:
+                errors.append("The database refused it: " + str(e).split("\n")[0])
+        if not errors:
+            messages.success(request, "Okayed. It is off the board" + (" until the note is reopened." if is_note else (" for " + dict(OKAY_PERIODS)[period] + "." if period else ".")))
+            return redirect(f"/po/{po_id}/")
+    return render(request, "core/okay.html", {"f": f, "state": match[0], "reason_text": match[1], "key": key, "is_note": is_note,
+                                              "periods": OKAY_PERIODS, "errors": errors, "text": request.POST.get("text", "")})
