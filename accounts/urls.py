@@ -8,5 +8,6 @@ urlpatterns = [
     path("2fa/setup/", views.two_factor_setup, name="two_factor_setup"),
     path("2fa/verify/", views.two_factor_verify, name="two_factor_verify"),
     path("2fa/backup-codes/", views.two_factor_new_codes, name="two_factor_new_codes"),
+    path("2fa/codes/", views.two_factor_codes, name="two_factor_codes"),
     path("account/", views.account, name="account"),
 ]

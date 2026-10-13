@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% block title %}Confirm it is you{% endblock %}
+{% block content %}
+<div class="panel-head"><div><p class="eyebrow">Account</p><h1 class="display">Confirm it is you</h1></div></div>
+<form method="post" class="card action okay-form">{% csrf_token %}<input type="hidden" name="stepup" value="1">
+  <p class="muted small">To {{ purpose }}, enter your password once more.</p>
+  {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+  <label>Password<input type="password" name="password" autocomplete="current-password" autofocus required></label>
+  <div class="form-actions"><a class="btn btn-ghost-dark" href="{% url 'account' %}">Cancel</a>&nbsp;&nbsp;<button class="btn btn-accent" type="submit">Continue</button></div>
+</form>
+{% endblock %}

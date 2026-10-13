@@ -9,9 +9,9 @@
   <div class="kv"><span>Backup codes left</span><span>{{ backup_left }}</span></div>
   <div class="account-actions">
     <a class="btn btn-ghost-dark" href="{% url 'two_factor_setup' %}">Set up a new phone</a>
-    <form method="post" action="{% url 'two_factor_new_codes' %}" class="inline">{% csrf_token %}<button class="btn btn-ghost-dark" type="submit">Make new backup codes</button></form>
+    <a class="btn btn-ghost-dark" href="{% url 'two_factor_new_codes' %}">Make new backup codes</a>
   </div>
-  <p class="muted small">Lost the phone and the codes? An administrator can reset your sign-in code from the admin screen; you then set it up again at your next sign-in.</p>
+  <p class="muted small">Lost the phone and the codes? The administrator can reset your sign-in code (they run <span class="mono">reset_2fa</span> with your username, or delete your devices in the admin screen); you then set it up again at your next sign-in.</p>
   {% else %}
   <p>No authenticator app yet. <a href="{% url 'two_factor_setup' %}">Set one up</a>.</p>
   {% endif %}

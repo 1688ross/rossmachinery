@@ -83,8 +83,9 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 # Second factor on every sign-in (authenticator app + backup codes). Off only for throwaway dev boxes.
-REQUIRE_2FA = os.environ.get("RMS_REQUIRE_2FA", "1") == "1"
+REQUIRE_2FA = os.environ.get("RMS_REQUIRE_2FA", "1").strip().lower() not in ("0", "false", "no", "off")
 OTP_TOTP_ISSUER = "Ross Machinery Sales"
+OTP_ADMIN_HIDE_SENSITIVE_DATA = True   # the admin can delete a device, never read its secret
 
 # Secure cookies need https. A laptop demo on http://localhost sets DJANGO_SECURE_COOKIES=0.
 _SECURE_COOKIES = os.environ.get("DJANGO_SECURE_COOKIES", "0" if DEBUG else "1") == "1"

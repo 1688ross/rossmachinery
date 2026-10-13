@@ -3,10 +3,12 @@ Tenant-context middleware: the session-context contract from schema/README secti
 
 Every request runs inside one transaction (ATOMIC_REQUESTS). Before any view touches schema
 'app', this middleware issues SET LOCAL app.tenant_id / app.user_id from the server-side
-session, never from anything the browser sends. With no logged-in user nothing is set, so
-every query against 'app' returns zero rows (fail closed).
+session, never from anything the browser sends. With no logged-in user, or a user who has not
+passed the second factor yet, nothing is set, so every query against 'app' returns zero rows
+(fail closed).
 """
 import uuid
+from django.conf import settings
 from django.db import connection, transaction
 
 
@@ -20,7 +22,8 @@ class TenantContextMiddleware:
         with transaction.atomic():
             ctx = request.session.get("app_ctx")
             request.app_ctx = None
-            if request.user.is_authenticated and ctx:
+            verified = (not settings.REQUIRE_2FA) or getattr(request.user, "is_verified", lambda: False)()
+            if request.user.is_authenticated and verified and ctx:
                 tenant_id, user_id = ctx.get("tenant_id"), ctx.get("user_id")
                 try:
                     uuid.UUID(tenant_id); uuid.UUID(user_id)

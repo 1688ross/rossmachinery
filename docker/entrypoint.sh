@@ -19,6 +19,14 @@ for i in $(seq 1 60); do
   sleep 1
 done
 
+case "${RMS_REQUIRE_2FA:-1}" in 0|false|no|off|FALSE|NO|OFF|False|No|Off)
+  if [ "${RMS_SEED_DEMO:-0}" != "1" ] && [ "${RMS_ALLOW_NO_2FA:-0}" != "1" ]; then
+    echo "!! Refusing to start: the second factor is off (RMS_REQUIRE_2FA=${RMS_REQUIRE_2FA}) on a box that is not a demo (RMS_SEED_DEMO is not 1)."
+    echo "!! Set RMS_REQUIRE_2FA=1 for a real install. For a throwaway box, set RMS_ALLOW_NO_2FA=1 as well."
+    exit 3
+  fi;;
+esac
+
 echo "== database $DB"
 admin -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$DB'" | grep -q 1 || admin -d postgres -c "CREATE DATABASE \"$DB\""
 admin -d "$DB" -c "CREATE TABLE IF NOT EXISTS public.schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
@@ -50,7 +58,7 @@ apply schema/migrations/0003_acks_and_previews.sql
 
 echo "== django tables"
 python manage.py migrate --noinput
-if [ "${RMS_SEED_DEMO:-0}" = "1" ]; then python manage.py seed_dev_users; fi
+if [ "${RMS_SEED_DEMO:-0}" = "1" ]; then RMS_SEED_DEMO=1 python manage.py seed_dev_users; fi
 python manage.py collectstatic --noinput >/dev/null
 
 echo "== serving on :${RMS_BIND_PORT:-8000} (profile ${PO_PROFILE:-sovereign}, second factor ${RMS_REQUIRE_2FA:-1})"

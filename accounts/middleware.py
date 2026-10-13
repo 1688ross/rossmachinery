@@ -20,7 +20,7 @@ class SecondFactorMiddleware:
         user = getattr(request, "user", None)
         if (settings.REQUIRE_2FA and user is not None and user.is_authenticated
                 and not getattr(user, "is_verified", lambda: False)()
-                and not request.path.startswith(ALLOWED_PREFIXES)):
+                and not request.path_info.startswith(ALLOWED_PREFIXES)):
             from django_otp.plugins.otp_totp.models import TOTPDevice
             has_device = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
             target = reverse("two_factor_verify" if has_device else "two_factor_setup")

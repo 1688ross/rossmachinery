@@ -211,3 +211,4 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .linkish{background:none;border:0;padding:0;color:var(--text-link);font:var(--type-body-sm);cursor:pointer;text-decoration:underline}
 .topbar .me{color:#fff;font-weight:600;margin-right:var(--space-3)}
 .account-card .account-actions{display:flex;gap:var(--space-3);margin:var(--space-3) 0}
+.okay-form input[type=password]{display:block;width:100%;margin:4px 0 var(--space-3);padding:8px 10px;border:1px solid var(--border-default);border-radius:var(--radius-md);font:var(--type-body);box-sizing:border-box;background:#fff}

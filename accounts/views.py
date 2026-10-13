@@ -46,7 +46,11 @@ def _new_backup_codes(user):
 
 
 def _clean(code):
-    return code.replace(" ", "").replace("-", "").strip()
+    return code.replace(" ", "").replace("-", "").strip().lower()
+
+
+def _password_ok(request):
+    return request.user.check_password(request.POST.get("password", ""))
 
 
 def _wait_text(info):
@@ -64,20 +68,36 @@ def two_factor_setup(request):
     enrolled = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
     if enrolled and not user.is_verified():
         return redirect("two_factor_verify")      # a password alone cannot replace the authenticator
-    device = TOTPDevice.objects.filter(user=user, confirmed=False).order_by("-id").first()
+    # Replacing a working authenticator is a step up: the password is asked again first.
+    if enrolled and request.session.get("stepup_setup") != True:
+        if request.method == "POST" and request.POST.get("stepup") == "1":
+            if _password_ok(request):
+                request.session["stepup_setup"] = True
+                return redirect("two_factor_setup")
+            return render(request, "accounts/stepup.html", {"error": "That password did not match.", "purpose": "set up a new phone", "action": "two_factor_setup"})
+        return render(request, "accounts/stepup.html", {"purpose": "set up a new phone", "action": "two_factor_setup"})
+    device = TOTPDevice.objects.select_for_update().filter(user=user, confirmed=False).order_by("-id").first()
     if device is None:
         device = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=False)
     error = None
     if request.method == "POST":
-        if device.verify_token(_clean(request.POST.get("code", ""))):
+        allowed, info = device.verify_is_allowed()
+        if not allowed:
+            error = "Too many wrong codes. Try again in %s." % _wait_text(info)
+        elif device.verify_token(_clean(request.POST.get("code", ""))):
             device.confirmed = True
             device.name = "authenticator"
             device.save()
             TOTPDevice.objects.filter(user=user).exclude(pk=device.pk).delete()
             codes = _new_backup_codes(user)
             otp_login(request, device)
-            return render(request, "accounts/2fa_codes.html", {"codes": codes, "next": _safe_next(request), "fresh": True})
-        error = "That code did not match. The number changes every 30 seconds; type the one showing now."
+            request.session.pop("stepup_setup", None)
+            request.session["new_backup_codes"] = {"codes": codes, "next": _safe_next(request), "fresh": not enrolled}
+            if enrolled:
+                messages.success(request, "Your authenticator was replaced. The old phone no longer works for this account.")
+            return redirect("two_factor_codes")
+        else:
+            error = "That code did not match. The number changes every 30 seconds; type the one showing now."
     key = base64.b32encode(device.bin_key).decode()
     return render(request, "accounts/2fa_setup.html", {
         "qr": _qr_svg(device.config_url), "key": " ".join(key[i:i + 4] for i in range(0, len(key), 4)),
@@ -85,36 +105,50 @@ def two_factor_setup(request):
 
 
 @login_required
+def two_factor_codes(request):
+    """The backup codes, shown once after they are made (kept out of the POST response so a
+    reload or a print cannot resubmit the form)."""
+    data = request.session.pop("new_backup_codes", None)
+    if not data:
+        return redirect("account")
+    return render(request, "accounts/2fa_codes.html", data)
+
+
+@login_required
 @require_http_methods(["GET", "POST"])
 def two_factor_verify(request):
     user = request.user
-    devices = list(TOTPDevice.objects.filter(user=user, confirmed=True))
-    if not devices:
+    if not TOTPDevice.objects.filter(user=user, confirmed=True).exists():
         return redirect("two_factor_setup")
     if user.is_verified():
         return redirect(_safe_next(request))
     error = None
     if request.method == "POST":
         code = _clean(request.POST.get("code", ""))
-        for d in devices:
-            allowed, info = d.verify_is_allowed()
-            if not allowed:
-                error = "Too many wrong codes. Try again in %s." % _wait_text(info)
-                break
-            if d.verify_token(code):
-                otp_login(request, d)
-                return redirect(_safe_next(request))
+        # Row locks: the request runs in one transaction, so parallel guesses queue behind each
+        # other and the throttle counts every one of them.
+        if code.isdigit() and len(code) == 6:
+            for d in TOTPDevice.objects.select_for_update().filter(user=user, confirmed=True):
+                allowed, info = d.verify_is_allowed()
+                if not allowed:
+                    error = "Too many wrong codes. Try again in %s." % _wait_text(info)
+                    break
+                if d.verify_token(code):
+                    otp_login(request, d)
+                    return redirect(_safe_next(request))
+            error = error or "That code did not match."
         else:
-            static = StaticDevice.objects.filter(user=user, confirmed=True).first()
-            static_ok, static_info = (static.verify_is_allowed() if static else (False, None))
-            if static and not static_ok and not error:
-                error = "Too many wrong codes. Try again in %s." % _wait_text(static_info)
-            if static and static_ok and static.verify_token(code):
+            static = StaticDevice.objects.select_for_update().filter(user=user, confirmed=True).first()
+            allowed, info = static.verify_is_allowed() if static else (False, None)
+            if static and not allowed:
+                error = "Too many wrong codes. Try again in %s." % _wait_text(info)
+            elif static and static.verify_token(code):
                 otp_login(request, static)
                 left = static.token_set.count()
                 messages.warning(request, f"You signed in with a backup code. {left} left. Make new ones from your account page before they run out.")
                 return redirect(_safe_next(request))
-            error = error or "That code did not match."
+            else:
+                error = "That backup code did not match. Backup codes are eight letters and numbers; app codes are six digits."
     return render(request, "accounts/2fa_verify.html", {"error": error, "next": _safe_next(request)})
 
 
@@ -126,9 +160,16 @@ def account(request):
 
 
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def two_factor_new_codes(request):
+    """New backup codes, after the password is entered again (the old codes stop working)."""
     if not request.user.is_verified():
         return redirect("two_factor_verify")
-    codes = _new_backup_codes(request.user)
-    return render(request, "accounts/2fa_codes.html", {"codes": codes, "next": "/account/", "fresh": False})
+    if request.method == "POST" and request.POST.get("stepup") == "1":
+        if _password_ok(request):
+            codes = _new_backup_codes(request.user)
+            request.session["new_backup_codes"] = {"codes": codes, "next": "/account/", "fresh": False}
+            messages.success(request, "New backup codes made. The old ones no longer work.")
+            return redirect("two_factor_codes")
+        return render(request, "accounts/stepup.html", {"error": "That password did not match.", "purpose": "make new backup codes", "action": "two_factor_new_codes"})
+    return render(request, "accounts/stepup.html", {"purpose": "make new backup codes", "action": "two_factor_new_codes"})

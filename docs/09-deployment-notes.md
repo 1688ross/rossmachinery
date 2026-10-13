@@ -21,7 +21,12 @@
 - **Second factor.** Every account signs in with a password and a six-digit code from an
   authenticator app; eight one-time backup codes are issued at enrolment. `RMS_REQUIRE_2FA=0`
   switches it off for a throwaway dev box only. Wrong codes are throttled (the wait doubles
-  after each miss). To reset someone who lost both phone and codes: an administrator deletes
-  their TOTP device and static device in the Django admin, and they enrol again at their next
-  sign-in. The dev seed gives every dev user a known authenticator key except `ross`, who goes
-  through first-time setup.
+  after each miss). Replacing the phone or making new backup codes asks for the password again.
+  To reset someone who lost both phone and codes, the administrator runs
+  `docker compose exec app python manage.py reset_2fa <username>` (or deletes their devices in
+  the Django admin, where secrets are hidden); they enrol again at their next sign-in. The office
+  administrator account is made once with `docker compose exec app python manage.py createsuperuser`.
+  The container refuses to start with the second factor off unless it is a demo (`RMS_SEED_DEMO=1`)
+  or `RMS_ALLOW_NO_2FA=1` is set deliberately.
+- **Sample logins.** `seed_dev_users` only runs with `RMS_SEED_DEMO=1`. It prints each sample
+  user's authenticator key and backup codes once; nothing about them is derived from the code.
