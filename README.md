@@ -8,12 +8,34 @@ This repository holds code, documents, synthetic test fixtures and the database 
 purchase orders, invoices, drawings, scans, database dumps, logs or secrets. See "Standing rule on real
 data" below.
 
-## Status (2026-09-24)
+## Status (2026-10-13)
 
-Phase 1 planning is complete. The database schema (`schema/migrations/0001_init.sql`) is written, passes a
-418-check row-level-security test suite on a fresh PostgreSQL 16 database, and has been through one
-red-team round (41 attacks, two low-severity leaks found and fixed). The Phase 1 build starts per
-`docs/06-phase1-plan.md`.
+The platform runs on synthetic data: control panel, folders with money and deliverables, document
+filing with previews, the actions behind every square, quotes with PDF, and a second-factor sign-in.
+Schema migrations 0001 to 0003 pass a 436-check row-level-security suite. Next: quotes into the main
+schema with "start a folder", the automatic readers, then the office install.
+
+## Run it on your Mac (or any machine with Docker)
+
+1. Install Docker Desktop from docker.com and start it.
+2. Get the code: in VS Code, clone `github.com/1688ross/rossmachinery` (or `git pull` if you have it).
+3. In a terminal inside that folder:
+
+   ```bash
+   docker compose up
+   ```
+
+   The first start downloads Postgres and builds the app (a few minutes). When the log says
+   `serving on :8000`, open **http://localhost:8000** and sign in as `ashley` / `devpass123`.
+   Other sample logins: `chuck`, `tammie`, `zach`, `ross` (same password).
+
+Everything you see is invented sample data. Stop with Ctrl+C; start again with the same command and
+the data is still there. `docker compose down -v` wipes it and the next start is fresh.
+
+The office install uses the same two files with four settings changed in a `.env` beside them:
+real passwords (`RMS_DB_ADMIN_PASSWORD`, `RMS_DB_APP_PASSWORD`, `DJANGO_SECRET_KEY`), the server's
+name in `DJANGO_ALLOWED_HOSTS`, `RMS_SEED_DEMO=0`, and `RMS_REQUIRE_2FA=1` once it is behind https.
+See `docs/09-deployment-notes.md`.
 
 ## Read in this order
 

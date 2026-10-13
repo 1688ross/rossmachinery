@@ -1,0 +1,9 @@
+.git
+var/
+staticfiles/
+__pycache__/
+*.pyc
+quote-generator/lib/
+quote-generator/fonts/
+branding/uploads/
+branding/ui_kits/

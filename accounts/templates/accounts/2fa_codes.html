@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+{% block title %}Backup codes{% endblock %}
+{% block body %}
+<main class="login">
+  <div class="login-card login-card-wide">
+    <img src="/static/assets/logos/rms-logo-color.png" alt="Ross Machinery Sales" class="login-logo">
+    <h1 class="eyebrow">{% if fresh %}Sign-in code is on{% else %}New backup codes{% endif %}</h1>
+    <p class="lead">These eight backup codes get you in if your phone is lost. Each one works once. Print them or keep them in a password manager, not on a sticky note. They are shown only now.</p>
+    <ul class="codes">{% for c in codes %}<li class="mono">{{ c }}</li>{% endfor %}</ul>
+    <a class="btn btn-primary" href="{{ next }}">Continue</a>
+  </div>
+</main>
+{% endblock %}

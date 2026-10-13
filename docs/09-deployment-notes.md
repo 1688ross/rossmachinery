@@ -18,3 +18,10 @@
   `app_user`, no BYPASSRLS). Migrations run as a superuser (they `SET LOCAL ROLE app_owner`
   and attach the audit trigger as the superuser). `schema/tests/run_tests.sh` is the gate
   before any migration reaches the office server.
+- **Second factor.** Every account signs in with a password and a six-digit code from an
+  authenticator app; eight one-time backup codes are issued at enrolment. `RMS_REQUIRE_2FA=0`
+  switches it off for a throwaway dev box only. Wrong codes are throttled (the wait doubles
+  after each miss). To reset someone who lost both phone and codes: an administrator deletes
+  their TOTP device and static device in the Django admin, and they enrol again at their next
+  sign-in. The dev seed gives every dev user a known authenticator key except `ross`, who goes
+  through first-time setup.

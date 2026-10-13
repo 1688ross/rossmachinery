@@ -21,7 +21,7 @@
   </nav>
   <div class="topbar-right">
     <span class="mono muted">{{ PO_PROFILE }}</span>
-    <span>{{ user.get_username }}</span>
+    <a class="me" href="{% url 'account' %}">{{ user.get_username }}</a>
     <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="btn btn-ghost">Sign out</button></form>
   </div>
 </header>

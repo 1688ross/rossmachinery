@@ -153,3 +153,9 @@ every screen is reviewed against.
   server's own store; a step page behind every square (mark done with a note or a document, raise a
   yellow or red, okay it with a reason, post a fix, set aside as a client credit which posts a credit memo);
   money reasons can be okayed for 30/60/90 days with the reason on record (migration 0003, `app.po_acks`).
+- **Sign-in with a second factor** is in: authenticator app on the phone (Microsoft Authenticator,
+  Google Authenticator, 1Password all work), set up on first sign-in, plus eight backup codes.
+  Nobody reaches a page without it.
+- **Vercel deploys the quote generator from `rossmachinery/quote-generator`** (Git-connected since
+  Oct 8). The separate `rms-quote-generator` repo is a leftover duplicate; Ross may delete it.
+

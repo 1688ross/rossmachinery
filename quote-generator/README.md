@@ -43,10 +43,9 @@ Accept the defaults when asked (no framework, no build command, output directory
 ### Which Vercel plan
 
 Vercel's free **Hobby** plan is licensed for personal, non-commercial use, and a quoting tool for
-a business counts as commercial. Put the project on a **Pro** team (one seat is enough). Pro also
-lifts a Hobby limitation that matters here: on Hobby, a push only deploys when the commit's author
-is the GitHub account connected to Vercel, so commits made by anyone else (including commits
-Claude authored) are silently ignored.
+a business counts as commercial. Put the project on a **Pro** team (one seat is enough). If a push
+ever fails to produce a deployment, check the commit author: Vercel can ignore pushes whose author
+is not a GitHub account connected to the Vercel project.
 
 ### Office passcode (recommended)
 
@@ -74,8 +73,8 @@ the CNAME record Vercel shows at the DNS host for rossmachinery.com.
 
 ## Updating
 
-Edit `index.html`, commit, push. Vercel redeploys from the connected repository (on Hobby, only
-for commits authored by the connected GitHub account; see "Which Vercel plan"). If you change
+Edit `index.html`, commit, push. Vercel redeploys from the connected repository
+(`1688ross/rossmachinery`, root directory `quote-generator`). If you change
 `lib/` or `fonts/`, people who used the page in the last few minutes may need a normal reload.
 The platform's own quote document (`../quotes/templates/quotes/document.html`) is kept in step
 with this page by hand.

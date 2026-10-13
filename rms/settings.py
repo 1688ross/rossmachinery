@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "accounts",
     "core",
     "quotes",
@@ -33,11 +34,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "accounts.middleware.SecondFactorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.TenantContextMiddleware",
@@ -79,8 +82,14 @@ LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+# Second factor on every sign-in (authenticator app + backup codes). Off only for throwaway dev boxes.
+REQUIRE_2FA = os.environ.get("RMS_REQUIRE_2FA", "1") == "1"
+OTP_TOTP_ISSUER = "Ross Machinery Sales"
+
+# Secure cookies need https. A laptop demo on http://localhost sets DJANGO_SECURE_COOKIES=0.
+_SECURE_COOKIES = os.environ.get("DJANGO_SECURE_COOKIES", "0" if DEBUG else "1") == "1"
+SESSION_COOKIE_SECURE = _SECURE_COOKIES
+CSRF_COOKIE_SECURE = _SECURE_COOKIES
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 60 * 60 * 10
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -95,6 +104,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "branding"]
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 # Where filed documents live on this server. Content-addressed; never served as static files.
 DOCUMENT_ROOT = os.environ.get("RMS_DOCUMENT_ROOT", str(BASE_DIR / "var" / "documents"))
