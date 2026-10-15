@@ -31,11 +31,14 @@ h2{font:var(--type-h3);color:var(--text-strong);margin:0 0 var(--space-3)}
 
 .board{display:flex;flex-direction:column;gap:var(--space-2)}
 .row{display:grid;grid-template-columns:18px minmax(220px,1.2fr) minmax(420px,2fr) minmax(220px,1.5fr);gap:var(--space-4);align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);color:inherit;box-shadow:var(--shadow-xs);position:relative;transition:transform 160ms cubic-bezier(.2,0,.1,1),box-shadow 160ms}
+.rowlink::after{content:"";position:absolute;inset:0;border-radius:inherit}   /* the whole row opens the folder */
+.rowlink:focus-visible{outline:2px solid var(--rms-blue);outline-offset:2px}
+.row .bars{position:relative;z-index:1}   /* squares and their cards sit above the row link */
 .row:hover,.row:focus-within{z-index:10}
 .row:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .row-red{border-left-color:var(--status-danger)} .row-yellow{border-left-color:var(--status-warning)} .row-green{border-left-color:var(--status-success)}
 .who{display:flex;flex-direction:column;gap:2px;min-width:0}
-.who .po{color:var(--text-strong);font-weight:600}
+.who .po{color:var(--text-strong);font-weight:600;align-self:flex-start}
 .who .client{font:var(--type-body-sm);color:var(--text-strong)}
 .who .title{font:var(--type-body-sm);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .why{font:var(--type-body-sm)}
@@ -110,7 +113,7 @@ h2{font:var(--type-h3);color:var(--text-strong);margin:0 0 var(--space-3)}
 .sq-grey{background:var(--steel-100);border-color:var(--steel-300)}
 .sq-na{background:transparent;border-style:dashed;border-color:var(--steel-300)}
 .sq-money{border-radius:50%}
-.sq-lg{width:18px;height:18px}
+.sq-lg{width:20px;height:20px;border-radius:3px}
 a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .bar{display:inline-flex;gap:3px;align-items:center}
 .bar-lg .sq{width:16px;height:16px}
@@ -127,10 +130,14 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .docs td{vertical-align:top}
 .proof{font:var(--type-caption);color:var(--text-link);margin-left:6px;border:1px solid var(--rms-blue-200);border-radius:var(--radius-pill);padding:0 6px}
 .proof-note{font:var(--type-caption);color:var(--text-muted);margin-left:6px;border:1px dashed var(--border-default);border-radius:var(--radius-pill);padding:0 6px;cursor:help}
-.steps .step-h{font:var(--type-caption);text-transform:none;letter-spacing:0;color:var(--text-muted);text-align:center;width:72px}
-.steps .step-cell{text-align:center;vertical-align:top;padding-top:8px}
-.steps .step-meta{font:var(--type-caption);color:var(--text-muted);margin-top:3px;line-height:1.3}
-.steps .owner{color:var(--rms-blue-700);font-weight:600}
+.card-steps{padding:var(--space-5) var(--space-5) var(--space-4)}
+.card-steps h2{margin-bottom:var(--space-4)}
+.steps .th td{padding-bottom:10px;vertical-align:bottom}
+.table.steps .th td.step-h{white-space:nowrap;text-align:center;width:96px;letter-spacing:.05em;padding-left:3px;padding-right:3px}
+.steps td{vertical-align:middle;padding-top:10px;padding-bottom:10px}
+.steps .step-cell{text-align:center;line-height:0}
+.steps .step-cell .sqw{vertical-align:middle}
+@media (max-width:1140px){.table.steps .th td.step-h{width:76px;font-size:.625rem;letter-spacing:.03em;padding-left:2px;padding-right:2px}}
 .doc-card .kv{padding:8px 0}
 .viewer-placeholder{margin-top:var(--space-4);padding:var(--space-6);border:1px dashed var(--border-default);border-radius:var(--radius-md);color:var(--text-muted);text-align:center;font:var(--type-body-sm)}
 
@@ -151,13 +158,35 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .paper-frame{background:var(--steel-200);padding:var(--space-5);border-radius:var(--radius-md)}
 .paper{width:8.5in;max-width:100%;height:11in;border:0;background:#fff;display:block;margin:0 auto;box-shadow:var(--shadow-lg)}
 
-/* Hover card on a square: the step name, then the detail. */
-.tip{display:none;position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);min-width:160px;max-width:300px;width:max-content;background:var(--rms-navy);color:#fff;border-left:3px solid var(--rms-yellow);border-radius:var(--radius-md);padding:8px 11px;font:var(--type-body-sm);line-height:1.4;text-align:left;white-space:normal;box-shadow:var(--shadow-md);flex-direction:column;gap:2px;pointer-events:none;z-index:6}
+/* Hover card on a square: the step name, a check in the corner when it is done, then the
+   facts as label/value rows. .sqw wraps the square and its card. */
+.sqw{position:relative;display:inline-block;line-height:0}
+.sqw .sq{display:block}
+.sqw:hover,.sqw:focus-within{z-index:5}
+.sqw::after{content:"";position:absolute;left:-14px;right:-14px;top:100%;height:12px;display:none}   /* bridge: no gap to cross */
+.sqw:hover::after{display:block}
+.sqw:hover .tip,.sqw:focus-within .tip{display:flex}
+.tip{display:none;position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);min-width:210px;max-width:330px;width:max-content;background:var(--rms-navy);color:#fff;border-left:3px solid var(--rms-yellow);border-radius:var(--radius-md);padding:9px 12px 10px;font:var(--type-body-sm);line-height:1.4;text-align:left;white-space:normal;box-shadow:var(--shadow-md);flex-direction:column;gap:3px;z-index:6;cursor:default}
 .tip::before{content:"";position:absolute;top:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top:0;border-bottom-color:var(--rms-navy)}
-.tip b{font-weight:600;letter-spacing:.02em}
-.tip span{color:var(--rms-blue-200)}
-.sq:hover .tip,.sq:focus-visible .tip{display:flex}
-.bar .sq:first-child .tip{left:0;transform:none}.bar .sq:first-child .tip::before{left:4px;transform:none}
+.tip::after{content:"";position:absolute;left:0;right:0;top:-10px;height:10px}   /* the card's own strip over the gap, full width, so a diagonal move does not lose it */
+.tip-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:3px}
+.tip-head b{font-weight:600;letter-spacing:.02em;color:#fff;padding-top:1px}
+.tip-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:#fff;font-style:normal;font-weight:700;font-size:13px;line-height:1}
+.tip-badge svg{width:14px;height:14px;fill:none;stroke:var(--status-success);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.tip-badge-red{color:var(--status-danger)} .tip-badge-yellow{background:var(--rms-yellow);color:var(--rms-navy)}
+.tip-row{display:grid;grid-template-columns:70px 1fr;gap:0 10px;align-items:baseline}
+.tip-row-plain{grid-template-columns:1fr}
+.tip-row .k{font:var(--type-caption);text-transform:uppercase;letter-spacing:.06em;color:var(--rms-blue-200);white-space:nowrap}
+.tip-row .v{color:#fff;overflow-wrap:anywhere}
+.tip-row.tone-late .v,.tip-row.tone-yellow .v{color:var(--rms-yellow-300)}
+.tip-row.tone-red .v{color:#f6a99f}
+.tip-line{font:var(--type-caption);font-weight:600;color:#fff;margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tip-head+.tip-line{margin-top:0;padding-top:0;border-top:0}
+.tip-more{font:var(--type-caption);color:var(--rms-blue-200);margin-top:4px}
+.tip a{color:#fff;text-decoration:underline;text-decoration-color:var(--rms-yellow);text-underline-offset:2px;text-decoration-thickness:1.5px}
+.tip a:hover{color:var(--rms-yellow)}
+.tip a:focus-visible{color:var(--rms-yellow);outline:2px solid var(--rms-yellow);outline-offset:2px;border-radius:2px}
+.bar .sqw:first-child .tip{left:0;transform:none}.bar .sqw:first-child .tip::before{left:5px;transform:none}
 
 /* ---- filing documents, dealing with squares ---- */
 .flash{margin:0 0 var(--space-4);padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);border-left:3px solid var(--rms-yellow);background:#fff;box-shadow:var(--shadow-xs);font:var(--type-body-sm);color:var(--text-strong)}
@@ -190,8 +219,8 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .marking{border-left:3px solid var(--rms-yellow)}
 .okay-form{max-width:640px}
 .okay-form label{display:block;font:var(--type-caption);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-strong)}
-.step-cell a.sq{display:inline-block}
-.step-cell .tip{left:0;transform:none;text-align:left}.step-cell .tip::before{left:8px;transform:none}
+.step-cell .tip{left:0;transform:none}.step-cell .tip::before{left:7px;transform:none}
+.step-cell:nth-last-child(-n+3) .tip{left:auto;right:0}.step-cell:nth-last-child(-n+3) .tip::before{left:auto;right:7px;transform:none}
 .f-grid label.check{display:flex;text-transform:none;letter-spacing:0;font:var(--type-body-sm);font-weight:400;color:var(--text-strong)}
 .f-grid label.check input{display:inline;width:auto;margin:3px 0 0}
 

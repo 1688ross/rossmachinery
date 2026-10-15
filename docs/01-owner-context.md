@@ -152,10 +152,34 @@ every screen is reviewed against.
 - **Built today:** document upload with the marking step and first-page previews, served from the
   server's own store; a step page behind every square (mark done with a note or a document, raise a
   yellow or red, okay it with a reason, post a fix, set aside as a client credit which posts a credit memo);
-  money reasons can be okayed for 30/60/90 days with the reason on record (migration 0003, `app.po_acks`).
+  money reasons can be acknowledged for 30/60/90 days with the reason on record (migration 0003, `app.po_acks`).
 - **Sign-in with a second factor** is in: authenticator app on the phone (Microsoft Authenticator,
   Google Authenticator, 1Password all work), set up on first sign-in, plus eight backup codes.
   Nobody reaches a page without it.
 - **Vercel deploys the quote generator from `rossmachinery/quote-generator`** (Git-connected since
   Oct 8). The separate `rms-quote-generator` repo is a leftover duplicate; Ross may delete it.
 
+## Update 2026-10-15: first look on Ross's Mac, and the hover round
+
+Ross ran the stack with Docker on his MacBook and signed in (first time anyone outside the build saw it).
+His feedback, all design, all acted on the same day:
+
+- **Deliverables table.** Room at the top of the box; one-word column headers (Quote, Approved, Ordered,
+  Production, Carrier, Processing, Shipped, Delivered, Installed) so the header row is one line tall;
+  each cell is the square and nothing else. The date, the proof link and the note moved into the hover.
+- **Hover cards, both pages.** Step name, then a white box with a green check in the top-right corner
+  when the step is done (a red or yellow "!" when it is flagged), then the facts as labelled rows:
+  Done or Due or Expected date, Flag, Carrier, Tracking, Proof (a real link to the document page),
+  Note. No owner name (who owns a step stays on the step page). A folder with several lines gets one
+  block per line, worst first, three at most; lines that say the same thing share one block, and facts
+  every line shares are said once at the top. His words:
+  "if its under carrier determined it should just say the carrier and a link to the email or document".
+  Nothing says "see folder for documents" any more; the document is linked.
+- **Wording.** "Okay it" and "Deal with it" struck him as brash. They are now **Acknowledge** (nothing is
+  wrong, say why, it comes off the board for 30/60/90 days or until the folder closes; on a flagged step it
+  clears the flag with the reason on record) and **Review** (opens the step page, where the choices are
+  Mark done, Raise a flag, Acknowledge, Post a fix, Set aside as a client credit). Database action keys
+  are unchanged (`okay`, `fix`, `credit`).
+- Mechanics worth knowing: the control-panel row is no longer one big link (links inside a link are not
+  allowed), the PO number is the link and it stretches over the row; cards stay open while the pointer
+  moves into them, and keyboard focus opens them too.

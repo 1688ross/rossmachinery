@@ -32,6 +32,15 @@ schema with "start a folder", the automatic readers, then the office install.
 Everything you see is invented sample data. Stop with Ctrl+C; start again with the same command and
 the data is still there. `docker compose down -v` wipes it and the next start is fresh.
 
+To pick up a new version: stop it (Ctrl+C), then
+
+   ```bash
+   git pull
+   docker compose up --build
+   ```
+
+`--build` matters: the app image carries a copy of the code, so a plain `up` keeps running the old one.
+
 The office install uses the same two files with four settings changed in a `.env` beside them:
 real passwords (`RMS_DB_ADMIN_PASSWORD`, `RMS_DB_APP_PASSWORD`, `DJANGO_SECRET_KEY`), the server's
 name in `DJANGO_ALLOWED_HOSTS`, `RMS_SEED_DEMO=0`, and `RMS_REQUIRE_2FA=1`. The container refuses to start

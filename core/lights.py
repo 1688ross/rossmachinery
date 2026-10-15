@@ -126,7 +126,8 @@ def judge(f, notes, today=None, acks=None):
             acked.append((r[1], a))
             for l in lights:
                 if l.key == r[2] and l.state in ("yellow", "red"):
-                    l.state, l.note = "grey", (l.note + " · okayed").strip(" ·")
+                    until = f" until {a.expires_on:%b %-d}" if a.expires_on else ""
+                    l.state, l.note = "grey", (l.note + " · acknowledged" + until).strip(" ·")
         else:
             kept.append(r)
     reasons = kept

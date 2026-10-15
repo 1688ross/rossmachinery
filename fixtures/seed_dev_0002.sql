@@ -85,7 +85,7 @@ UPDATE app.line_steps ls SET done_at = TIMESTAMPTZ '2026-09-16 15:40-04', proof_
   AND line_item_id = (SELECT line_id FROM seed_lines WHERE po_id = '44444444-4444-4444-4444-444444444403' AND line_no = 30);
 
 -- Folder 4 (way covers, ...4404): all done.
-UPDATE app.line_steps SET done_at = TIMESTAMPTZ '2026-08-20 09:00-04', proof_note = 'Done; see folder documents'
+UPDATE app.line_steps SET done_at = TIMESTAMPTZ '2026-08-20 09:00-04', proof_note = 'Per the 8/20 close-out call with Northstar'
   WHERE po_id = '44444444-4444-4444-4444-444444444404' AND applicable;
 
 -- Folder 5 (hot zone, ...4405): line 10 in production; line 20 (install service) order not yet placed and overdue -> Zach.

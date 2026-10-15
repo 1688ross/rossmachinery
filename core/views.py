@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 from . import db, storage
 from .lights import judge
 from .models import Ack, ChecklistItem, Document, Folder, LedgerEntry, LineItem, LineStep, Member, Note, Party
-from .steps import STEPS, LABEL, ORDER as STEP_ORDER, square, squares_for_line, worst
+from .steps import STEPS, COLUMNS, LABEL, ORDER as STEP_ORDER, badge, describe, why, worst
 
 DOC_KINDS = [("client_po", "Client purchase order"), ("client_invoice", "Our invoice to the client"),
              ("vendor_invoice", "Vendor invoice"), ("remittance", "Remittance or payment advice"),
@@ -54,49 +54,94 @@ def _ctx_or_403(request):
     return None if request.app_ctx else render(request, "core/no_context.html", status=403)
 
 
-def fulfillment_bar(steps, members, lines_by_id=None):
+def fulfillment_bar(steps, members, lines_by_id=None, docs=None, parties=None, today=None):
     """Collapse all lines' steps into one square per step: the worst state across lines.
-    Title lists per-line detail. Returns list of dicts in step order."""
+    Each square carries a hover card: the step name, a check in the corner when every line is
+    done, then per line what a person wants to see (date, carrier, tracking, proof, note, owner).
+    Returns (bar, waiting): the squares in step order, and the first step the folder is waiting on."""
+    lines_by_id, docs, parties = lines_by_id or {}, docs or {}, parties or {}
     by_key = defaultdict(list)
     for s in steps:
         by_key[s.step_key].append(s)
-    multi_line = len({s.line_item_id for s in steps}) > 1
+    multi = len({s.line_item_id for s in steps}) > 1
     bar, waiting = [], None
     for key, label in STEPS:
-        rows = by_key.get(key, [])
-        if not rows or all(not r.applicable for r in rows):
-            bar.append({"key": key, "state": "na", "label": label, "lines": ["Not applicable"], "title": f"{label}: not applicable"})
+        rows = [r for r in by_key.get(key, []) if r.applicable]
+        if not rows:
+            bar.append({"key": key, "state": "na", "label": label, "badge": None, "more": 0,
+                        "blocks": [{"rows": [{"value": "Not applicable"}]}], "title": f"{label}: Not applicable"})
             continue
-        sq = [dict(zip(("state", "title"), square(r, None, (lines_by_id or {}).get(r.line_item_id))), key=r.step_key, step=r) for r in rows]
-        state = worst([q["state"] for q in sq])
-        titles = [q["title"] for q in sq if q["state"] != "na"]
-        # Hover card lines: worst first, prefixed with the line number when the folder has more than one line.
-        items = sorted([q for q in sq if q["state"] != "na"], key=lambda q: DETAIL_ORDER[q["state"]])
-        details = []
-        for q in items[:3]:
-            li = (lines_by_id or {}).get(q["step"].line_item_id)
-            prefix = f"{str(li.line_no).zfill(5)} · " if multi_line and li is not None else ""
-            t = q["title"]
-            details.append(prefix + (t[len(label) + 2:] if t.startswith(label + ": ") else t))
-        if len(items) > 3:
-            details.append("…")
-        bar.append({"key": key, "state": state, "label": label, "lines": details,
-                    "title": " / ".join(titles[:3]) + (" …" if len(titles) > 3 else "")})
+        items = []
+        for r in rows:
+            li = lines_by_id.get(r.line_item_id)
+            state, headline, facts = describe(r, today, li, carrier=parties.get(getattr(li, "tracking_carrier_party_id", None)),
+                                              doc=docs.get(r.proof_document_id), owner=members.get(r.owner_user_id))
+            items.append({"state": state, "headline": headline, "rows": facts, "step": r, "line": li,
+                          "flagged": r.flag in ("red", "yellow")})
+        # Worst first, then line order.
+        items.sort(key=lambda q: (DETAIL_ORDER[q["state"]], q["line"].line_no if q["line"] is not None else 0))
+        state = worst([q["state"] for q in items])
+        blocks, more = _blocks(items) if multi else ([{"head": None, "rows": items[0]["rows"]}], 0)
+        flags = [q["step"].flag for q in items if q["flagged"]]
+        corner = "done" if all(q["step"].done_at and not q["flagged"] for q in items) else ("flag" if flags else None)
+        summary = "; ".join((f"{q['line'].line_no:05d} " if multi and q["line"] is not None else "") + q["headline"] for q in items[:3])
+        bar.append({"key": key, "state": state, "label": label, "badge": corner, "badge_tone": "red" if "red" in flags else "yellow",
+                    "blocks": blocks, "more": more, "title": f"{label}: {summary}" + (" …" if len(items) > 3 else "")})
         if waiting is None and state in ("grey", "yellow", "red"):
-            owners = {r.owner_user_id for r in rows if r.done_at is None and r.applicable}
+            owners = {q["step"].owner_user_id for q in items if q["step"].done_at is None}
             names = [members[o].full_name.split()[0] for o in owners if o in members]
-            waiting = {"label": label, "state": state, "owners": names,
-                       "late": [q for q in sq if q["state"] in ("yellow", "red")]}
+            late = [{"why": why(label, q["headline"], q["flagged"])} for q in items if q["state"] in ("yellow", "red")]
+            waiting = {"label": label, "state": state, "owners": names, "late": late}
     return bar, waiting
 
 
+def _same(a, b):
+    return a.get("label") == b.get("label") and a.get("value") == b.get("value") and (
+        getattr(a.get("doc"), "id", None) == getattr(b.get("doc"), "id", None))
+
+
+def _blocks(items, limit=3):
+    """Per-line blocks for a card, without saying the same thing twice: lines whose facts are
+    identical share one block ("00010, 00030"); facts every block shares move to the top, as
+    long as no block is left empty. Returns (blocks, how many lines were left out)."""
+    groups = []
+    for q in items:
+        for g in groups:
+            if len(g["rows"]) == len(q["rows"]) and all(_same(a, b) for a, b in zip(g["rows"], q["rows"])):
+                g["lines"].append(q["line"])
+                break
+        else:
+            groups.append({"rows": list(q["rows"]), "lines": [q["line"]]})
+    if len(groups) == 1:
+        return [{"head": None, "rows": groups[0]["rows"]}], 0
+    shared = [r for r in groups[0]["rows"] if all(any(_same(r, x) for x in g["rows"]) for g in groups[1:])]
+    if shared and all(len(g["rows"]) > len([r for r in g["rows"] if any(_same(r, x) for x in shared)]) for g in groups):
+        for g in groups:
+            g["rows"] = [r for r in g["rows"] if not any(_same(r, x) for x in shared)]
+        blocks = [{"head": None, "rows": shared}]
+    else:
+        blocks = []
+    for g in groups[:limit]:
+        nums = ", ".join(f"{li.line_no:05d}" for li in g["lines"] if li is not None)
+        head = f"{nums} · {g['lines'][0].description}" if len(g["lines"]) == 1 and g["lines"][0] is not None else nums
+        blocks.append({"head": head, "rows": g["rows"]})
+    return blocks, sum(len(g["lines"]) for g in groups[limit:])
+
+
 DETAIL_ORDER = {"red": 0, "yellow": 1, "grey": 2, "green": 3, "na": 4}
-STATE_WORDS = {"green": "Done, with proof", "yellow": "Look at this", "red": "Pick up the phone", "grey": "Not yet", "na": "Not applicable"}
+STATE_WORDS = {"green": "Done", "yellow": "Look at this", "red": "Pick up the phone", "grey": "Not yet", "na": "Not applicable"}
 
 
 def money_bar(verdict):
-    return [{"key": l.key, "state": l.state, "label": l.label, "lines": [l.note] if l.note else [STATE_WORDS.get(l.state, "")],
-             "title": f"{l.label}{': ' + l.note if l.note else ''}"} for l in verdict.lights]
+    """One round square per money light. The hover card: the light's name, a check when it is
+    settled, and the amount or state in one line."""
+    out = []
+    for l in verdict.lights:
+        note = l.note or STATE_WORDS.get(l.state, "")
+        note = note[:1].upper() + note[1:]
+        out.append({"key": l.key, "state": l.state, "label": l.label, "badge": "done" if l.state == "green" else None, "more": 0,
+                    "blocks": [{"rows": [{"value": note}]}], "title": f"{l.label}: {note}"})
+    return out
 
 
 @login_required
@@ -111,16 +156,18 @@ def panel(request):
     notes, steps, members = _notes_by_po(ids), _steps_by_po(ids), _members()
     acks = _acks_by_po(ids)
     lines_by_id = {l.id: l for l in LineItem.objects.filter(po_id__in=ids)}
+    docs = {d.id: d for d in Document.objects.filter(po_id__in=ids, deleted_at__isnull=True)}
+    parties = {p.id: p for p in Party.objects.filter(is_carrier=True)}
     rows = []
     for f in folders:
         v = judge(f, notes.get(f.po_id, []), acks=acks.get(f.po_id, []))
-        fbar, waiting = fulfillment_bar(steps.get(f.po_id, []), members, lines_by_id)
+        fbar, waiting = fulfillment_bar(steps.get(f.po_id, []), members, lines_by_id, docs, parties)
         overall = worst([v.overall] + [q["state"] for q in fbar])
         if f.status == "closed":
             overall = "green"
         reason = v.reasons[0][1] if v.reasons else None
         if waiting and waiting["late"] and (not v.reasons or ORDER[waiting["state"]] <= ORDER[v.reasons[0][0]]):
-            reason = waiting["late"][0]["title"]
+            reason = waiting["late"][0]["why"]
         elif reason is None and waiting:
             reason = f"Waiting on: {waiting['label'].lower()}"
         rows.append({"f": f, "v": v, "fbar": fbar, "mbar": money_bar(v), "overall": overall, "reason": reason, "waiting": waiting})
@@ -157,12 +204,16 @@ def po_detail(request, po_id):
     for s in LineStep.objects.filter(po_id=po_id):
         steps[s.line_item_id].append(s)
     for l in lines:
-        l.squares = squares_for_line(steps.get(l.id, []), line=l)
-        for q in l.squares:
-            q["doc"] = docs.get(q["step"].proof_document_id)
-            q["owner"] = members.get(q["step"].owner_user_id)
-            q["label"] = LABEL[q["key"]]
-    fbar, waiting = fulfillment_bar([s for ss in steps.values() for s in ss], members, {l.id: l for l in lines})
+        carrier = parties.get(l.tracking_carrier_party_id)
+        l.squares = []
+        for st in sorted(steps.get(l.id, []), key=lambda x: STEP_ORDER.get(x.step_key, 99)):
+            doc, owner = docs.get(st.proof_document_id), members.get(st.owner_user_id)
+            state, headline, facts = describe(st, None, l, carrier=carrier, doc=doc, owner=owner)
+            label = LABEL.get(st.step_key, st.step_key)
+            l.squares.append({"key": st.step_key, "step": st, "state": state, "headline": headline, "label": label, "doc": doc,
+                              "owner": owner, "badge": badge(st), "badge_tone": st.flag, "blocks": [{"rows": facts}], "more": 0,
+                              "title": f"{label}: {headline}"})
+    fbar, waiting = fulfillment_bar([s for ss in steps.values() for s in ss], members, {l.id: l for l in lines}, docs, parties)
     checklist = list(ChecklistItem.objects.filter(po_id=po_id).order_by("item_key"))
     client_entries = [e for e in entries if e.side == "client"]
     vendor_entries = [e for e in entries if e.side in ("vendor", "freight", "commission")]
@@ -174,9 +225,9 @@ def po_detail(request, po_id):
     for l in lines:
         for q in l.squares:
             if q["state"] in ("yellow", "red") and q["step"].flag:
-                reasons.append((q["state"], f"Line {l.line_no:05d} {q['label'].lower()}: {q['step'].flag_reason}", f"step:{q['step'].id}"))
+                reasons.append((q["state"], f"Line {l.line_no:05d} {q['label'].lower()} · {q['step'].flag_reason}", f"step:{q['step'].id}"))
             elif q["state"] == "yellow":
-                reasons.append(("yellow", f"Line {l.line_no:05d}: {q['title']}.", f"step:{q['step'].id}"))
+                reasons.append(("yellow", f"Line {l.line_no:05d} {q['label'].lower()}: {q['headline'][:1].lower() + q['headline'][1:]}.", f"step:{q['step'].id}"))
             q["acks"] = step_acks.get(str(q["step"].id), [])
     reasons.sort(key=lambda r: ORDER[r[0]])
     acked = [(text, a, members.get(a.created_by)) for text, a in v.acked]
@@ -184,7 +235,7 @@ def po_detail(request, po_id):
     return render(request, "core/po_detail.html", {
         "f": f, "v": v, "overall": overall, "reasons": reasons, "acked": acked, "notes": notes, "lines": lines, "checklist": checklist,
         "client_entries": client_entries, "vendor_entries": vendor_entries, "docs": doc_list,
-        "fbar": fbar, "mbar": money_bar(v), "tab": request.GET.get("tab", "folder"), "step_labels": STEPS,
+        "fbar": fbar, "mbar": money_bar(v), "tab": request.GET.get("tab", "folder"), "step_cols": COLUMNS,
     })
 
 
@@ -341,12 +392,13 @@ def step_action(request, po_id, step_id):
         messages.info(request, f"{LABEL.get(st.step_key, st.step_key)} does not apply to line {line.line_no:05d}.")
         return redirect(f"/po/{po_id}/")
     members = _members()
-    state, title = square(st, None, line)
     label = LABEL.get(st.step_key, st.step_key)
     acks = list(Ack.objects.filter(po_id=po_id, subject=f"step:{st.id}").order_by("-created_at"))
     for a in acks:
         a.who = members.get(a.created_by)
     doc = Document.objects.filter(id=st.proof_document_id, deleted_at__isnull=True).first() if st.proof_document_id else None
+    carrier = Party.objects.filter(id=line.tracking_carrier_party_id).first() if line.tracking_carrier_party_id else None
+    state, title, _facts = describe(st, None, line, carrier=carrier, doc=doc)
     errors, action = [], request.POST.get("action", "")
     if request.method == "POST":
         text = request.POST.get("text", "").strip()
@@ -372,11 +424,11 @@ def step_action(request, po_id, step_id):
                       messages.success(request, f"Line {line.line_no:05d} {label.lower()} flagged {colour}.")
               elif action == "okay":
                   if len(text) < 3:
-                      errors.append("Say why it is fine.")
+                      errors.append("Say why it is fine as it is.")
                   else:
                       db.clear_step_flag(st.id)
                       db.insert_ack(tenant, str(po_id), f"step:{st.id}", "okay", text)
-                      messages.success(request, f"Okayed line {line.line_no:05d} {label.lower()}.")
+                      messages.success(request, f"Acknowledged line {line.line_no:05d} {label.lower()}; the flag is cleared.")
               elif action == "fix":
                   if len(text) < 3:
                       errors.append("Say what was done.")
@@ -453,7 +505,7 @@ def okay_reason(request, po_id, key):
             except DatabaseError as e:
                 errors.append("The database refused it: " + str(e).split("\n")[0])
         if not errors:
-            messages.success(request, "Okayed. It is off the board" + (" until the note is reopened." if is_note else (" for " + dict(OKAY_PERIODS)[period] + "." if period else ".")))
+            messages.success(request, "Acknowledged. It is off the board" + (" until the note is reopened." if is_note else (" for " + dict(OKAY_PERIODS)[period] + "." if period else ".")))
             return redirect(f"/po/{po_id}/")
     return render(request, "core/okay.html", {"f": f, "state": match[0], "reason_text": match[1], "key": key, "is_note": is_note,
                                               "periods": OKAY_PERIODS, "errors": errors, "text": request.POST.get("text", "")})

@@ -13,16 +13,16 @@
   <div class="kv"><span>Done</span><span>{% if st.done_at %}{{ st.done_at|date:"M j, Y" }}{% else %}not yet{% endif %}</span></div>
   <div class="kv"><span>Proof</span><span>{% if doc %}<a href="{% url 'doc_detail' doc.id %}">{{ doc.title|default:doc.original_filename }}</a>{% elif st.proof_note %}{{ st.proof_note }}{% else %}none{% endif %}</span></div>
   {% if st.flag %}<div class="kv"><span>Flag</span><span class="flag-{{ st.flag }}">{{ st.flag|capfirst }}: {{ st.flag_reason }}</span></div>{% endif %}
-  {% for a in acks %}<div class="ack"><span class="mono muted">{{ a.created_at|date:"m/d/y" }}</span> {{ a.who.full_name|default:"someone" }} {% if a.action == 'okay' %}okayed it{% elif a.action == 'fix' %}posted a fix{% else %}set it aside as a client credit{% endif %}: {{ a.reason }}</div>{% endfor %}
+  {% for a in acks %}<div class="ack"><span class="mono muted">{{ a.created_at|date:"m/d/y" }}</span> {{ a.who.full_name|default:"someone" }} {% if a.action == 'okay' %}acknowledged it{% elif a.action == 'fix' %}posted a fix{% else %}set it aside as a client credit{% endif %}: {{ a.reason }}</div>{% endfor %}
 </section>
 {% if errors %}<section class="reasons reasons-red">{% for e in errors %}<p class="reason reason-red"><span class="dot"></span>{{ e }}</p>{% endfor %}</section>{% endif %}
 
 <div class="actions-grid">
 {% if st.flag %}
   <form method="post" class="card action action-okay">{% csrf_token %}<input type="hidden" name="action" value="okay">
-    <h2>Okay it</h2><p class="muted small">It is fine as it is. Say why; the flag clears and the reason stays on record.</p>
+    <h2>Acknowledge</h2><p class="muted small">It is fine as it is. Say why; the flag clears and your reason stays on record.</p>
     <textarea name="text" rows="3" placeholder="Vendor confirmed the balance ships Friday; customer knows.">{% if action == 'okay' %}{{ text }}{% endif %}</textarea>
-    <button class="btn btn-ghost-dark" type="submit">Okay it</button>
+    <button class="btn btn-ghost-dark" type="submit">Acknowledge</button>
   </form>
   <form method="post" class="card action action-fix">{% csrf_token %}<input type="hidden" name="action" value="fix">
     <h2>Post a fix</h2><p class="muted small">Something was done about it. The flag clears.</p>
@@ -39,7 +39,7 @@
 {% else %}
   {% if not st.done_at %}
   <form method="post" class="card action action-done">{% csrf_token %}<input type="hidden" name="action" value="done">
-    <h2>Mark it done</h2><p class="muted small">With a note as proof, or <a href="{% url 'doc_upload' f.po_id %}?step={{ st.id }}">file a document as proof</a> instead.</p>
+    <h2>Mark done</h2><p class="muted small">With a note as proof, or <a href="{% url 'doc_upload' f.po_id %}?step={{ st.id }}">file a document as proof</a> instead.</p>
     <textarea name="text" rows="3" placeholder="Confirmed by phone with Dana at Kleve, 10/13.">{% if action == 'done' %}{{ text }}{% endif %}</textarea>
     <button class="btn btn-accent" type="submit">Mark done</button>
   </form>
