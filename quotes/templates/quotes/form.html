@@ -2,8 +2,10 @@
 {% block title %}{% if q %}Edit {{ q.number }}{% else %}New quote{% endif %}{% endblock %}
 {% block content %}
 <a class="back" href="{% url 'quote_list' %}">&larr; Quotes</a>
-<div class="panel-head"><div><p class="eyebrow">Sales</p><h1 class="display">{% if q %}Edit quote{% else %}New quote{% endif %}</h1></div></div>
-<form method="post" class="qform">{% csrf_token %}
+<div class="panel-head"><div><p class="eyebrow">Sales</p><h1 class="display">{% if q %}Edit quote{% else %}New quote{% endif %}</h1></div>
+  <div class="actions"><button type="button" class="btn btn-ghost-dark" id="pv-toggle" aria-pressed="false" aria-controls="qpreview">Show preview</button></div></div>
+<div class="qlayout" id="qlayout">
+<form method="post" class="qform" id="qform">{% csrf_token %}
   <section class="card">
     <h2>Who it's for</h2>
     <div class="f-grid">
@@ -38,8 +40,12 @@
       <label class="span2">Closing paragraph<textarea name="closing" rows="2">{{ initial.closing|default:'' }}</textarea></label>
     </div>
   </section>
-  <div class="form-actions"><button class="btn btn-primary" type="submit">Preview quote</button></div>
+  <div class="form-actions"><button class="btn btn-accent" type="submit">Save quote</button></div>
 </form>
+<aside class="qpreview" id="qpreview" hidden>
+  <div class="qpreview-inner" id="qpreview-inner"><iframe class="paper paper-live" id="pv" title="The quote as it will print, updated as you type"></iframe></div>
+</aside>
+</div>
 <template id="linerow">
   <tr class="line">
     <td class="mono item">00010</td>
@@ -63,6 +69,27 @@
     table.appendChild(tr); renumber(); }
   (existing.length ? existing : [{}]).forEach(add);
   document.getElementById('addline').onclick = ()=>add();
+})();
+(function(){
+  // Live preview beside the form: the page is rendered by the server from the fields as they are, nothing is saved.
+  // Off by default (it can distract); the choice is remembered on this computer.
+  const KEY = 'rms.quotes.preview', form = document.getElementById('qform'), aside = document.getElementById('qpreview'), inner = document.getElementById('qpreview-inner'),
+        frame = document.getElementById('pv'), btn = document.getElementById('pv-toggle'), layout = document.getElementById('qlayout');
+  let on = false, timer = null, seq = 0;
+  function fit(){ const s = Math.min(1, (inner.clientWidth - 24) / 816); frame.style.transform = 'scale(' + s + ')'; inner.style.height = Math.round(1056 * s + 24) + 'px'; }
+  async function refresh(){
+    if (!on) return; const mine = ++seq;
+    try { const r = await fetch('{% url "quote_live" %}', { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+      if (r.ok && mine === seq) frame.srcdoc = await r.text(); } catch (e) {}
+  }
+  function schedule(){ clearTimeout(timer); timer = setTimeout(refresh, 250); }
+  function set(v){ on = v; aside.hidden = !v; layout.classList.toggle('with-preview', v); btn.textContent = v ? 'Hide preview' : 'Show preview'; btn.setAttribute('aria-pressed', String(v));
+    try { localStorage.setItem(KEY, v ? '1' : '0'); } catch (e) {} if (v){ fit(); refresh(); } }
+  btn.addEventListener('click', () => set(!on));
+  form.addEventListener('input', schedule); form.addEventListener('change', schedule); form.addEventListener('click', e => { if (e.target.closest('#addline, .x')) schedule(); });
+  window.addEventListener('resize', () => { if (on) fit(); });
+  let saved = '0'; try { saved = localStorage.getItem(KEY) || '0'; } catch (e) {}
+  set(saved === '1');
 })();
 </script>
 {% endblock %}

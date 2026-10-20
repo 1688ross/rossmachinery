@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.http import require_POST
 
 from .models import Quote
 
@@ -110,6 +111,15 @@ def quote_preview(request, pk):
 
 def _document_html(request, q):
     return render_to_string("quotes/document.html", {"q": q, "base": request.build_absolute_uri("/")}, request=request)
+
+
+@login_required
+@require_POST
+def quote_live(request):
+    """The quote page rendered from the form as it is being filled in (nothing is saved). The form
+    posts itself here and shows the answer beside the fields."""
+    q = _fill(Quote(), request.POST, request.user)
+    return HttpResponse(_document_html(request, q))
 
 
 @login_required
