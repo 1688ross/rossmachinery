@@ -19,7 +19,7 @@ SET app.user_id   = '22222222-2222-2222-2222-222222222201';
 UPDATE app.users SET auth_subject = 'local|chuck' WHERE id = '22222222-2222-2222-2222-222222222201';
 
 SELECT app.add_member('ross@rms.example',   'Ross Culliton', 'admin',   '22222222-2222-2222-2222-222222222202', 'local|ross');
-SELECT app.add_member('tammie@rms.example', 'Tammie Smith',  'manager', '22222222-2222-2222-2222-222222222203', 'local|tammie');
+SELECT app.add_member('tammy@rms.example',  'Tammy Smith',   'manager', '22222222-2222-2222-2222-222222222203', 'local|tammy');
 -- The owner attests the others; a second admin will attest the owner (two humans rule).
 UPDATE app.users SET is_us_person = true, us_person_basis = 'US citizen (dev fixture)'
  WHERE id IN ('22222222-2222-2222-2222-222222222202', '22222222-2222-2222-2222-222222222203');

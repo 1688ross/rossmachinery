@@ -7,7 +7,7 @@ change once the office uses it.
 
 A control panel that checks whether all systems are go. One row per open PO. One light per step. Green means
 done and clean. Grey means not reached yet. Yellow means something does not line up but nothing is on fire.
-Red means someone has to pick up the phone. The people who act on it are the owner, Tammie and Ross.
+Red means someone has to pick up the phone. The people who act on it are the owner, Tammy and Ross.
 
 ## The home screen
 
@@ -96,5 +96,5 @@ filled grey, green, yellow or red; hover shows step, date and proof link. Labels
 PO page. Must stay readable at forty lines a month for one client.
 
 **People.** Owner (large machine sales), Ashley (tooling, materials and accessories for the same
-clients; around forty orders a month for the biggest client), Zach (purchaser; places the orders),
-Tammie (payments). Ross builds and administers.
+clients; around forty orders a month for the biggest client), Eric (purchaser; places the orders),
+Tammy (payments). Ross builds and administers.

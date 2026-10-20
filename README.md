@@ -27,7 +27,7 @@ schema with "start a folder", the automatic readers, then the office install.
 
    The first start downloads Postgres and builds the app (a few minutes). When the log says
    `serving on :8000`, open **http://localhost:8000** and sign in as `ashley` / `devpass123`.
-   Other sample logins: `chuck`, `tammie`, `zach`, `ross` (same password).
+   Other sample logins: `chuck`, `tammy`, `eric`, `ross` (same password). Logins are first names; the person's full name is what shows on screen and on quotes.
 
 Everything you see is invented sample data. Stop with Ctrl+C; start again with the same command and
 the data is still there. `docker compose down -v` wipes it and the next start is fresh.

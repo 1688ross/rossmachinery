@@ -9,8 +9,8 @@ from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from accounts.models import User
 
-DEV = [("chuck", "local|chuck", "Chuck", "Culliton"), ("ross", "local|ross", "Ross", "Culliton"), ("tammie", "local|tammie", "Tammie", "Smith"),
-       ("ashley", "local|ashley", "Ashley", "Culliton"), ("zach", "local|zach", "Zach", "Morales")]   # names match fixtures/seed_dev*.sql
+DEV = [("chuck", "local|chuck", "Chuck", "Culliton"), ("ross", "local|ross", "Ross", "Culliton"), ("tammy", "local|tammy", "Tammy", "Smith"),
+       ("ashley", "local|ashley", "Ashley", "Schena"), ("eric", "local|eric", "Eric", "Wold")]   # logins are first names; names match fixtures/seed_dev*.sql
 
 
 class Command(BaseCommand):

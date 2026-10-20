@@ -3,11 +3,11 @@
 SET ROLE app_user;
 SET app.tenant_id = '11111111-1111-1111-1111-111111111111';
 SET app.user_id   = '22222222-2222-2222-2222-222222222202';   -- Ross (admin) adds people
-SELECT app.add_member('ashley@rms.example', 'Ashley Culliton', 'manager', '22222222-2222-2222-2222-222222222204', 'local|ashley');
-SELECT app.add_member('zach@rms.example',   'Zach Morales',    'clerk',   '22222222-2222-2222-2222-222222222205', 'local|zach');
+SELECT app.add_member('ashley@rms.example', 'Ashley Schena',   'manager', '22222222-2222-2222-2222-222222222204', 'local|ashley');
+SELECT app.add_member('eric@rms.example',   'Eric Wold',       'clerk',   '22222222-2222-2222-2222-222222222205', 'local|eric');
 UPDATE app.users SET is_us_person = true, us_person_basis = 'US citizen (dev fixture)'
  WHERE id IN ('22222222-2222-2222-2222-222222222204', '22222222-2222-2222-2222-222222222205');
-SET app.user_id = '22222222-2222-2222-2222-222222222203';   -- Tammie (manager) files the rest
+SET app.user_id = '22222222-2222-2222-2222-222222222203';   -- Tammy (manager) files the rest
 
 -- Documents (metadata only; no files exist in the dev store)
 INSERT INTO app.documents (id, tenant_id, po_id, kind, title, original_filename, storage_key, sha256, mime_type, byte_size, page_count, document_date, source, email_from, email_subject, received_at) VALUES
@@ -21,7 +21,7 @@ INSERT INTO app.documents (id, tenant_id, po_id, kind, title, original_filename,
  ('55555555-5555-5555-5555-555555555508', '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444403', 'packing_slip',    'Bluewater BOL 44120',              'BOL_44120.pdf',      'dev/08', repeat('8',64), 'application/pdf', 38000,  1, DATE '2026-09-16', 'email', 'dispatch@bluewater-freight.example', 'BOL 44120 PO HB-77812 shipped', TIMESTAMPTZ '2026-09-16 15:40-05'),
  ('55555555-5555-5555-5555-555555555509', '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444405', 'correspondence',  'Kleve order confirmation 7071133','OC_7071133.pdf',     'dev/09', repeat('9',64), 'application/pdf', 47000,  1, DATE '2026-09-24', 'email', 'orders@kleve-furnace.example', 'Order confirmation 7071133 ref 4500701890', TIMESTAMPTZ '2026-09-24 05:05-05');
 
--- Steps. Helper: one row per step per line. Owners: Ashley (sales side), Zach (order placed), Tammie (money is on the folder, not here).
+-- Steps. Helper: one row per step per line. Owners: Ashley (sales side), Eric (order placed), Tammy (money is on the folder, not here).
 CREATE TEMP TABLE seed_lines AS
 SELECT li.id AS line_id, li.po_id, li.line_no, li.category FROM app.po_line_items li;
 
@@ -88,7 +88,7 @@ UPDATE app.line_steps ls SET done_at = TIMESTAMPTZ '2026-09-16 15:40-04', proof_
 UPDATE app.line_steps SET done_at = TIMESTAMPTZ '2026-08-20 09:00-04', proof_note = 'Per the 8/20 close-out call with Northstar'
   WHERE po_id = '44444444-4444-4444-4444-444444444404' AND applicable;
 
--- Folder 5 (hot zone, ...4405): line 10 in production; line 20 (install service) order not yet placed and overdue -> Zach.
+-- Folder 5 (hot zone, ...4405): line 10 in production; line 20 (install service) order not yet placed and overdue -> Eric.
 UPDATE app.line_steps ls SET done_at = d.ts, proof_document_id = d.doc, proof_note = d.note
 FROM (VALUES
   ('quote_sent', TIMESTAMPTZ '2026-09-02 09:00-04', NULL, 'Quote SA120071'),

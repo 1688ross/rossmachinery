@@ -133,7 +133,7 @@ every screen is reviewed against.
 ## Update 2026-10-01
 
 - **QuickBooks Desktop**, confirmed. Edition and year still to read off the start screen.
-- **Tammie closes the folders.** She is the sign-off on the close-out step. In the schema that is the
+- **Tammy closes the folders.** She is the sign-off on the close-out step. In the schema that is the
   manager role (close needs manager or above), which is how she is seeded.
 - **All users are US citizens and have been cleared with the client.** The export-control gating is a safety net, not a daily path. Each user still gets an attestation recorded in the system by an admin, so the record exists if anyone asks.
 
@@ -183,3 +183,14 @@ His feedback, all design, all acted on the same day:
 - Mechanics worth knowing: the control-panel row is no longer one big link (links inside a link are not
   allowed), the PO number is the link and it stretches over the row; cards stay open while the pointer
   moves into them, and keyboard focus opens them too.
+
+## Update 2026-10-20: quotes in the platform, the client list, and the real names
+
+- The Quotes tab builds its PDF in the browser (same layout as the standalone page); a "Show
+  preview" toggle draws the page beside the form as it is typed; the Company box is a client list
+  drawn from the parties table with "+ New client", and saving a quote adds the client (with the
+  typed address) to that list. Any role that can write (everyone but an auditor) can add a client;
+  Ross will confirm that with Chuck.
+- **The people, by name:** Ashley Schena, Ross Culliton, Chuck Culliton (president and owner),
+  Tammy Smith, Eric Wold. Logins stay as first names; full names show in the top bar, on quotes
+  and wherever a person is named. The sample data's "Tammie" and "Zach" were placeholders.
