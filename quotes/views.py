@@ -89,10 +89,23 @@ def quote_edit(request, pk):
     return render(request, "quotes/form.html", {"q": q, "initial": initial, "lines_json": json.dumps(q.lines or [{}])})
 
 
+QUOTE_FIELDS = ("number", "reference", "to_name", "to_company", "to_address", "subject", "intro", "fob", "delivery", "terms",
+                "closing", "signer_name", "signer_title")
+
+
+def quote_json(q):
+    """The quote as the browser-side PDF builder expects it (the standalone quote page's shape)."""
+    d = {f: getattr(q, f) or "" for f in QUOTE_FIELDS}
+    d["quote_date"] = q.quote_date.isoformat() if q.quote_date else ""
+    d["lines"] = [{"description": l.get("description", ""), "details": list(l.get("details") or []),
+                   "qty": str(l.get("qty", "1")), "unit_price": str(l.get("unit_price", "0"))} for l in (q.lines or [])]
+    return d
+
+
 @login_required
 def quote_preview(request, pk):
     q = get_object_or_404(Quote, pk=pk)
-    return render(request, "quotes/preview.html", {"q": q})
+    return render(request, "quotes/preview.html", {"q": q, "q_json": quote_json(q)})
 
 
 def _document_html(request, q):
@@ -109,7 +122,11 @@ def quote_document(request, pk):
 
 @login_required
 def quote_pdf(request, pk):
+    """Server-side fallback (needs a Chromium at RMS_CHROME). The preview page builds the PDF in the
+    browser instead, so this only runs when that script did not load."""
     q = get_object_or_404(Quote, pk=pk)
+    if not os.path.exists(CHROME):
+        return redirect("quote_document", pk=q.pk)
     html = _document_html(request, q)
     with tempfile.TemporaryDirectory() as tmp:
         src = os.path.join(tmp, "quote.html")

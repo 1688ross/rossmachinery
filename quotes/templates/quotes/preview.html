@@ -6,9 +6,29 @@
   <div><p class="eyebrow">{{ q.to_company }} · {{ q.quote_date|date:"M j, Y" }}</p><h1 class="display">{{ q.number }} <span class="title-sub">{{ q.subject }} · {{ q.total|money }}</span></h1></div>
   <div class="actions">
     <a class="btn btn-ghost-dark" href="{% url 'quote_edit' q.pk %}">Edit</a>
-    <a class="btn btn-primary" href="{% url 'quote_pdf' q.pk %}">Download PDF</a>
+    <a class="btn btn-accent" id="dl" href="{% url 'quote_pdf' q.pk %}" download="{{ q.number }}.pdf">Download PDF</a>
     <span class="btn btn-disabled" title="Creates the folder from this quote once quotes live in the main schema (migration 0003)">Start a folder · soon</span>
   </div>
 </div>
 <div class="paper-frame"><iframe class="paper" src="{% url 'quote_document' q.pk %}" title="Quote {{ q.number }}"></iframe></div>
+{{ q_json|json_script:"quote-data" }}
+<script src="/static/quotes/pdfmake.min.js"></script>
+<script src="/static/quotes/rms-fonts.js"></script>
+<script src="/static/quotes/quote-pdf.js"></script>
+<script>
+(function(){
+  // The PDF is built right here in the browser, same layout as the standalone quote page.
+  // If the script did not load, the link falls through to the server's own PDF route.
+  var btn = document.getElementById('dl');
+  btn.addEventListener('click', function(e){
+    if (!window.RMSQuotePDF || typeof pdfMake === 'undefined' || !window.RMS_FONTS) return;
+    e.preventDefault();
+    var q = JSON.parse(document.getElementById('quote-data').textContent), label = btn.textContent;
+    btn.textContent = 'Preparing PDF…'; btn.classList.add('btn-disabled');
+    RMSQuotePDF.download(q, (q.number || 'quote').replace(/[^\w.-]+/g, '_') + '.pdf')
+      .catch(function(err){ alert('Could not build the PDF. ' + ((err && err.message) || '')); })
+      .then(function(){ btn.textContent = label; btn.classList.remove('btn-disabled'); });
+  });
+})();
+</script>
 {% endblock %}

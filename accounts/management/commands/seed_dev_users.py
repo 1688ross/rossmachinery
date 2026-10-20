@@ -9,16 +9,17 @@ from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from accounts.models import User
 
-DEV = [("chuck", "local|chuck"), ("ross", "local|ross"), ("tammie", "local|tammie"), ("ashley", "local|ashley"), ("zach", "local|zach")]
+DEV = [("chuck", "local|chuck", "Chuck", "Culliton"), ("ross", "local|ross", "Ross", "Culliton"), ("tammie", "local|tammie", "Tammie", "Smith"),
+       ("ashley", "local|ashley", "Ashley", "Culliton"), ("zach", "local|zach", "Zach", "Morales")]   # names match fixtures/seed_dev*.sql
 
 
 class Command(BaseCommand):
     def handle(self, *args, **opts):
         if os.environ.get("RMS_SEED_DEMO") != "1":
             raise CommandError("seed_dev_users creates sample logins with a known password. Set RMS_SEED_DEMO=1 to confirm this is a dev or demo box.")
-        for username, subject in DEV:
+        for username, subject, first, last in DEV:
             u, created = User.objects.get_or_create(username=username, defaults={"auth_subject": subject})
-            u.auth_subject = subject
+            u.auth_subject, u.first_name, u.last_name = subject, first, last   # the quote form signs with the full name
             u.set_password("devpass123")
             u.is_staff = u.is_superuser = username == "ross"    # ross is the demo administrator
             u.save()
