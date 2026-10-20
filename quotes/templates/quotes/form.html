@@ -4,6 +4,7 @@
 <a class="back" href="{% url 'quote_list' %}">&larr; Quotes</a>
 <div class="panel-head"><div><p class="eyebrow">Sales</p><h1 class="display">{% if q %}Edit quote{% else %}New quote{% endif %}</h1></div>
   <div class="actions"><button type="button" class="btn btn-ghost-dark" id="pv-toggle" aria-pressed="false" aria-controls="qpreview">Show preview</button></div></div>
+{% if errors %}<section class="reasons reasons-red">{% for e in errors %}<p class="reason reason-red"><span class="dot"></span>{{ e }}</p>{% endfor %}</section>{% endif %}
 <div class="qlayout" id="qlayout">
 <form method="post" class="qform" id="qform">{% csrf_token %}
   <section class="card">
@@ -12,8 +13,13 @@
       <label>Quotation number<input name="number" value="{{ initial.number }}" required></label>
       <label>Date<input type="date" name="quote_date" value="{{ initial.quote_date }}" required></label>
       <label>Client reference (RFQ or PO number)<input name="reference" value="{{ initial.reference|default:'' }}" placeholder="RFQ# 6000826582"></label>
+      <label>Client<select name="client" id="client" required>
+        <option value="">Choose a client…</option>
+        {% for c in clients %}<option value="{{ c.id }}" {% if initial.client == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        <option value="new" {% if initial.client == 'new' %}selected{% endif %}>+ New client…</option>
+      </select></label>
+      <label id="company-wrap" hidden>Company name <span class="muted">(goes on the client list when you save)</span><input name="to_company" id="to_company" value="{{ initial.to_company|default:'' }}" placeholder="Sikorsky Aircraft"></label>
       <label>Contact name<input name="to_name" value="{{ initial.to_name|default:'' }}" placeholder="Mr. Patrick Eells"></label>
-      <label>Company<input name="to_company" value="{{ initial.to_company|default:'' }}" required placeholder="Sikorsky Aircraft"></label>
       <label class="span2">Address<textarea name="to_address" rows="2" placeholder="6900 Main Street&#10;Stratford, CT 06615">{{ initial.to_address|default:'' }}</textarea></label>
       <label class="span2">Subject<input name="subject" value="{{ initial.subject|default:'' }}" required placeholder="Cribmaster Software"></label>
       <label class="span2">Opening line <span class="muted">(leave blank for the standard one)</span><textarea name="intro" rows="2">{{ initial.intro|default:'' }}</textarea></label>
@@ -46,6 +52,7 @@
   <div class="qpreview-inner" id="qpreview-inner"><iframe class="paper paper-live" id="pv" title="The quote as it will print, updated as you type"></iframe></div>
 </aside>
 </div>
+{{ clients_json|json_script:"clients-data" }}
 <template id="linerow">
   <tr class="line">
     <td class="mono item">00010</td>
@@ -69,6 +76,18 @@
     table.appendChild(tr); renumber(); }
   (existing.length ? existing : [{}]).forEach(add);
   document.getElementById('addline').onclick = ()=>add();
+})();
+(function(){
+  // Client list: pick one and the address on file (or from the last quote to them) fills any empty fields; "New client" opens the name box.
+  const sel = document.getElementById('client'), wrap = document.getElementById('company-wrap'), company = document.getElementById('to_company'),
+        toName = document.querySelector('[name=to_name]'), addr = document.querySelector('[name=to_address]'), data = JSON.parse(document.getElementById('clients-data').textContent);
+  function sync(picked){
+    const v = sel.value, isNew = v === 'new';
+    wrap.hidden = !isNew; company.required = isNew;
+    if (picked && data[v]){ if (!addr.value.trim() && data[v].address) addr.value = data[v].address; if (!toName.value.trim() && data[v].contact) toName.value = data[v].contact; }
+    if (picked && isNew) company.focus();
+  }
+  sel.addEventListener('change', () => sync(true)); sync(false);
 })();
 (function(){
   // Live preview beside the form: the page is rendered by the server from the fields as they are, nothing is saved.

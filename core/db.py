@@ -80,3 +80,26 @@ def insert_note(tenant_id, po_id, body, kind="comment"):
 def resolve_note(note_id):
     return _one("UPDATE app.po_notes SET resolved_at = now(), resolved_by = app.current_user_id() WHERE id = %s::uuid AND resolved_at IS NULL RETURNING id",
                 [str(note_id)])
+
+
+def insert_party(tenant_id, name, addr=None, is_client=True):
+    """A new party on the client list. addr: {line1, line2, city, region, postal} or None."""
+    a = addr or {}
+    return _one(
+        """INSERT INTO app.parties (id, tenant_id, name, is_client, address_line1, address_line2, city, region, postal_code, country)
+           VALUES (%s::uuid, %s::uuid, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+        [str(uuid.uuid4()), tenant_id, name, is_client, a.get("line1"), a.get("line2"), a.get("city"), a.get("region"), a.get("postal"),
+         "US" if a.get("postal") else None])
+
+
+def update_party_address(party_id, addr):
+    a = addr or {}
+    return _one(
+        """UPDATE app.parties SET address_line1 = %s, address_line2 = %s, city = %s, region = %s, postal_code = %s,
+                                  country = COALESCE(country, %s)
+           WHERE id = %s::uuid RETURNING id""",
+        [a.get("line1"), a.get("line2"), a.get("city"), a.get("region"), a.get("postal"), "US" if a.get("postal") else None, str(party_id)])
+
+
+def mark_client(party_id):
+    return _one("UPDATE app.parties SET is_client = true WHERE id = %s::uuid RETURNING id", [str(party_id)])

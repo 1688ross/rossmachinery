@@ -1,6 +1,7 @@
 /* Ross Machinery Sales platform. Built on the design-system tokens (branding/tokens). */
 /* Fonts: system fallbacks until the brand fonts are vendored (no outbound requests). */
 *{box-sizing:border-box} html{background:var(--surface-page)}
+[hidden]{display:none !important}   /* the hidden attribute wins over any display rule below */
 body{margin:0;font:var(--type-body);color:var(--text-body);font-family:var(--font-body)}
 a{color:var(--text-link);text-decoration:none}
 .mono{font-family:var(--font-mono);font-size:.9em}

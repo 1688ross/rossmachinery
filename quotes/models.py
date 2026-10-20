@@ -27,6 +27,7 @@ class Quote(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     po_id = models.UUIDField(null=True, blank=True)   # the folder this quote started, once it exists
+    client_party_id = models.UUIDField(null=True, blank=True)   # app.parties row (the client list); RLS decides what we can see
 
     class Meta:
         db_table = 'django"."quotes_quote'

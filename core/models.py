@@ -14,11 +14,22 @@ class Party(models.Model):
     is_client = models.BooleanField()
     is_vendor = models.BooleanField()
     is_carrier = models.BooleanField()
+    email = models.TextField(null=True)
+    phone = models.TextField(null=True)
+    address_line1 = models.TextField(null=True)
+    address_line2 = models.TextField(null=True)
     city = models.TextField(null=True)
     region = models.TextField(null=True)
+    postal_code = models.TextField(null=True)
     country = models.TextField(null=True)
     payment_terms = models.TextField(null=True)
     is_active = models.BooleanField()
+
+    @property
+    def address_text(self):
+        """The mailing address as lines, the way the quote form shows it."""
+        last = " ".join(x for x in [f"{self.city}," if self.city and (self.region or self.postal_code) else self.city, self.region, self.postal_code] if x)
+        return "\n".join(x for x in [self.address_line1, self.address_line2, last] if x)
 
     class Meta:
         managed = False
