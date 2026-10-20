@@ -186,8 +186,8 @@ BEGIN
   PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                      WHERE n.nspname = 'app' AND c.relkind = 'r' AND NOT (c.relrowsecurity AND c.relforcerowsecurity)) = 0,
                    'every table in schema app has RLS ENABLED and FORCED');
-  PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'app' AND c.relkind = 'r') = 18,
-                   'schema app has the 18 expected tables (16 in 0001, line_steps in 0002, po_acks in 0003)');
+  PERFORM rt.check((SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'app' AND c.relkind = 'r') = 19,
+                   'schema app has the 19 expected tables (16 in 0001, line_steps in 0002, po_acks in 0003, party_contacts in 0004)');
   PERFORM rt.check((SELECT count(*) FROM pg_constraint co
                      WHERE co.contype = 'f' AND co.confrelid = 'app.purchase_orders'::regclass AND array_length(co.conkey, 1) = 2) = 9,
                    'every folder child references purchase_orders through a composite (tenant_id, po_id) FK (9 FKs)');
@@ -1350,6 +1350,42 @@ BEGIN
   PERFORM rt.check((SELECT count(*) FROM app.po_acks WHERE po_id = v_po) = 1, 'a viewer can read acknowledgements');
   PERFORM rt.expect_error(format('INSERT INTO app.po_acks (tenant_id, po_id, subject, action, reason) VALUES (%L, %L, ''money:margin'', ''okay'', ''viewer says so'')', rt.id('ta'), v_po), ARRAY['42501'], 'a viewer cannot acknowledge anything');
   -- (no non-US fixture found)
+END $$;
+
+-- =============================================================================
+-- §21c party_contacts: the people at a company are tenant-scoped and writer-only (0004)
+-- =============================================================================
+DO $$
+DECLARE v_id uuid; v_po uuid;
+BEGIN
+  PERFORM rt.section('21c. party_contacts and order_type (migration 0004)');
+  PERFORM rt.ctx('ta', 'olivia');
+  INSERT INTO app.party_contacts (tenant_id, party_id, name, title, email, phone, division)
+    VALUES (rt.id('ta'), rt.id('c1'), '  Dana Whitfield ', 'Purchasing', ' Dana.W@lockmart.example ', '860-555-0100', 'Stratford Materials') RETURNING id INTO v_id;
+  PERFORM rt.check((SELECT name FROM app.party_contacts WHERE id = v_id) = 'Dana Whitfield', 'a writer can add a contact to a company; the name is trimmed');
+  PERFORM rt.check((SELECT email FROM app.party_contacts WHERE id = v_id) = 'dana.w@lockmart.example', 'the email is stored trimmed and lower-case');
+  PERFORM rt.check((SELECT created_by FROM app.party_contacts WHERE id = v_id) = rt.id('olivia'), 'the contact is stamped with the acting user');
+  PERFORM rt.expect_error(format('INSERT INTO app.party_contacts (tenant_id, party_id, name) VALUES (%L, %L, ''dana whitfield'')', rt.id('ta'), rt.id('c1')),
+                          ARRAY['23505'], 'the same name twice at one company is refused, whatever the capitalisation');
+  PERFORM rt.expect_error(format('INSERT INTO app.party_contacts (tenant_id, party_id, name, email) VALUES (%L, %L, ''Bad Email'', ''not-an-address'')', rt.id('ta'), rt.id('c1')),
+                          ARRAY['23514'], 'an email that is not an address is refused');
+  PERFORM rt.expect_error(format('INSERT INTO app.party_contacts (tenant_id, party_id, name) VALUES (%L, %L, ''Wrong Tenant'')', rt.id('tb'), rt.id('c1')),
+                          ARRAY['42501', '23503'], 'a contact cannot be filed under another tenant');
+  UPDATE app.party_contacts SET phone = '860-555-0199' WHERE id = v_id;
+  PERFORM rt.check((SELECT phone FROM app.party_contacts WHERE id = v_id) = '860-555-0199', 'a writer can correct a contact');
+  PERFORM rt.check((SELECT created_by FROM app.party_contacts WHERE id = v_id) = rt.id('olivia'), 'created_by survives an update');
+  INSERT INTO app.purchase_orders (tenant_id, client_party_id, title, order_type) VALUES (rt.id('ta'), rt.id('c1'), 'Order type test folder', 'otr_machine') RETURNING id INTO v_po;
+  PERFORM rt.check((SELECT order_type FROM app.purchase_orders WHERE id = v_po) = 'otr_machine', 'a folder can carry an order type');
+  PERFORM rt.expect_error(format('UPDATE app.purchase_orders SET order_type = ''yacht'' WHERE id = %L', v_po), ARRAY['22P02'], 'an order type off the list is refused');
+  PERFORM rt.ctx('ta', 'vera');
+  PERFORM rt.check((SELECT count(*) FROM app.party_contacts WHERE id = v_id) = 1, 'a viewer can read contacts');
+  PERFORM rt.expect_error(format('INSERT INTO app.party_contacts (tenant_id, party_id, name) VALUES (%L, %L, ''Viewer Added'')', rt.id('ta'), rt.id('c1')),
+                          ARRAY['42501'], 'a viewer cannot add a contact');
+  UPDATE app.party_contacts SET phone = 'x' WHERE id = v_id;   -- row security filters the row out: zero rows, no error
+  PERFORM rt.check((SELECT phone FROM app.party_contacts WHERE id = v_id) = '860-555-0199', 'a viewer cannot change a contact (the update touches no row)');
+  PERFORM rt.ctx('tb', 'bob');
+  PERFORM rt.check((SELECT count(*) FROM app.party_contacts WHERE id = v_id) = 0, 'another tenant cannot see the contact');
+  PERFORM rt.check((SELECT count(*) FROM app.party_contacts) = 0, 'another tenant sees no contacts at all');
 END $$;
 
 -- =============================================================================

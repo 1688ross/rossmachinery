@@ -13,13 +13,23 @@
       <label>Quotation number<input name="number" value="{{ initial.number }}" required></label>
       <label>Date<input type="date" name="quote_date" value="{{ initial.quote_date }}" required></label>
       <label>Client reference (RFQ or PO number)<input name="reference" value="{{ initial.reference|default:'' }}" placeholder="RFQ# 6000826582"></label>
-      <label>Client<select name="client" id="client" required>
-        <option value="">Choose a client…</option>
+      <label>Company<select name="client" id="client" required>
+        <option value="">Choose a company…</option>
         {% for c in clients %}<option value="{{ c.id }}" {% if initial.client == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
-        <option value="new" {% if initial.client == 'new' %}selected{% endif %}>+ New client…</option>
+        <option value="new" {% if initial.client == 'new' %}selected{% endif %}>+ New company…</option>
       </select></label>
-      <label id="company-wrap" hidden>Company name <span class="muted">(goes on the client list when you save)</span><input name="to_company" id="to_company" value="{{ initial.to_company|default:'' }}" placeholder="Sikorsky Aircraft"></label>
-      <label>Contact name<input name="to_name" value="{{ initial.to_name|default:'' }}" placeholder="Mr. Patrick Eells"></label>
+      <label>Order type<select name="order_type" required>
+        <option value="">Choose…</option>
+        {% for v, lbl in order_types %}<option value="{{ v }}" {% if initial.order_type == v %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+      </select></label>
+      <label id="company-wrap" class="span2" hidden>Company name <span class="muted">(goes on the company list when you save)</span><input name="to_company" id="to_company" value="{{ initial.to_company|default:'' }}" placeholder="Sikorsky Aircraft"></label>
+      <div class="span2 contacts">
+        <span class="f-label">Contact</span>
+        <div id="contact-list" class="contact-list"><span class="muted small">Choose the company first.</span></div>
+        <div id="new-contacts"></div>
+        <button type="button" class="btn btn-ghost-dark btn-sm" id="add-contact">+ New contact</button>
+        <p class="muted small">Tick who the quote goes to; the first one ticked is addressed by name and the rest are listed under them. A new contact is added to the company when you save.</p>
+      </div>
       <label class="span2">Address<textarea name="to_address" rows="2" placeholder="6900 Main Street&#10;Stratford, CT 06615">{{ initial.to_address|default:'' }}</textarea></label>
       <label class="span2">Subject<input name="subject" value="{{ initial.subject|default:'' }}" required placeholder="Cribmaster Software"></label>
       <label class="span2">Opening line <span class="muted">(leave blank for the standard one)</span><textarea name="intro" rows="2">{{ initial.intro|default:'' }}</textarea></label>
@@ -53,6 +63,14 @@
 </aside>
 </div>
 {{ clients_json|json_script:"clients-data" }}
+{{ picked_json|json_script:"picked-data" }}
+{{ new_contacts_json|json_script:"new-contacts-data" }}
+<template id="ncrow">
+  <div class="nc-row">
+    <input class="nc-name" placeholder="Name (Ms. Jordan Lee)" required><input class="nc-title" placeholder="Title"><input class="nc-email" type="email" placeholder="Email"><input class="nc-phone" placeholder="Phone">
+    <button type="button" class="x" title="Remove">×</button>
+  </div>
+</template>
 <template id="linerow">
   <tr class="line">
     <td class="mono item">00010</td>
@@ -78,16 +96,45 @@
   document.getElementById('addline').onclick = ()=>add();
 })();
 (function(){
-  // Client list: pick one and the address on file (or from the last quote to them) fills any empty fields; "New client" opens the name box.
+  // Company list: pick one and its people appear as tick boxes and the address on file fills an empty address;
+  // "New company" opens the name box. "+ New contact" adds a row that becomes a contact at that company on save.
   const sel = document.getElementById('client'), wrap = document.getElementById('company-wrap'), company = document.getElementById('to_company'),
-        toName = document.querySelector('[name=to_name]'), addr = document.querySelector('[name=to_address]'), data = JSON.parse(document.getElementById('clients-data').textContent);
-  function sync(picked){
+        addr = document.querySelector('[name=to_address]'), list = document.getElementById('contact-list'), newBox = document.getElementById('new-contacts'),
+        ncTpl = document.getElementById('ncrow'), data = JSON.parse(document.getElementById('clients-data').textContent);
+  let picked = new Set(JSON.parse(document.getElementById('picked-data').textContent));
+  function renderContacts(){
+    const v = sel.value, people = (data[v] && data[v].contacts) || [];
+    list.innerHTML = '';
+    if (!v){ list.innerHTML = '<span class="muted small">Choose the company first.</span>'; return; }
+    if (!people.length){ list.innerHTML = '<span class="muted small">' + (v === 'new' ? 'A new company has no contacts yet. Add one below.' : 'Nobody on file for this company yet. Add one below.') + '</span>'; return; }
+    people.forEach(p => {
+      const lab = document.createElement('label'); lab.className = 'check contact';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.name = 'contact'; cb.value = p.id; cb.checked = picked.has(p.id);
+      cb.addEventListener('change', () => { if (cb.checked) picked.add(p.id); else picked.delete(p.id); });
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = p.name; lab.appendChild(cb); lab.appendChild(nm);
+      const meta = [p.title, p.division, p.email, p.phone].filter(Boolean).join(' · ');
+      if (meta){ const m = document.createElement('span'); m.className = 'muted small'; m.textContent = ' · ' + meta; lab.appendChild(m); }
+      list.appendChild(lab);
+    });
+  }
+  function renumber(){ newBox.querySelectorAll('.nc-row').forEach((row, i) => { ['name', 'title', 'email', 'phone'].forEach(k => { row.querySelector('.nc-' + k).name = 'nc-' + i + '-' + k; }); }); }
+  function addContact(d){
+    const row = ncTpl.content.firstElementChild.cloneNode(true);
+    if (d){ ['name', 'title', 'email', 'phone'].forEach(k => { row.querySelector('.nc-' + k).value = d[k] || ''; }); }
+    row.querySelector('.x').onclick = () => { row.remove(); renumber(); };
+    newBox.appendChild(row); renumber(); return row;
+  }
+  function sync(changed){
     const v = sel.value, isNew = v === 'new';
     wrap.hidden = !isNew; company.required = isNew;
-    if (picked && data[v]){ if (!addr.value.trim() && data[v].address) addr.value = data[v].address; if (!toName.value.trim() && data[v].contact) toName.value = data[v].contact; }
-    if (picked && isNew) company.focus();
+    if (changed){ picked = new Set(); if (data[v] && !addr.value.trim() && data[v].address) addr.value = data[v].address; }
+    renderContacts();
+    if (changed && isNew) company.focus();
   }
-  sel.addEventListener('change', () => sync(true)); sync(false);
+  sel.addEventListener('change', () => sync(true));
+  document.getElementById('add-contact').addEventListener('click', () => { addContact().querySelector('.nc-name').focus(); });
+  JSON.parse(document.getElementById('new-contacts-data').textContent).forEach(addContact);
+  sync(false);
 })();
 (function(){
   // Live preview beside the form: the page is rendered by the server from the fields as they are, nothing is saved.

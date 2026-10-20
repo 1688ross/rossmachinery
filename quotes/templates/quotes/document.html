@@ -47,8 +47,8 @@ table.items .details div{margin:1px 0}
   <div class="co">212 North Plains Industrial Rd., Wallingford, CT 06492<br>Tel (203) 269-2950 · Fax (203) 269-2962<br>www.rossmachinery.com</div>
 </div>
 <div class="meta">
-  <div><div class="eyebrow">To</div><div class="to">{% if q.to_name %}{{ q.to_name }}
-{% endif %}{{ q.to_company }}{% if q.to_address %}
+  <div><div class="eyebrow">To</div><div class="to">{% for n in q.to_lines %}{{ n }}
+{% endfor %}{{ q.to_company }}{% if q.to_address %}
 {{ q.to_address }}{% endif %}</div></div>
   <div class="ref">
     <div class="eyebrow">Quotation</div><div class="big">{{ q.number }}</div>
@@ -57,7 +57,7 @@ table.items .details div{margin:1px 0}
   </div>
 </div>
 <p class="subject"><span class="eyebrow">Subject</span><strong>{{ q.subject }}</strong></p>
-<p>{% if q.to_name %}Dear {{ q.to_name }}:{% endif %}</p>
+<p>{% if q.salutation_name %}Dear {{ q.salutation_name }}:{% endif %}</p>
 <p>{{ q.intro }}</p>
 <table class="items">
   <tr><th>Item</th><th>Description</th><th class="n">Qty</th><th class="n">Unit price</th><th class="n">Amount</th></tr>

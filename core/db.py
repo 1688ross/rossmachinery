@@ -103,3 +103,10 @@ def update_party_address(party_id, addr):
 
 def mark_client(party_id):
     return _one("UPDATE app.parties SET is_client = true WHERE id = %s::uuid RETURNING id", [str(party_id)])
+
+
+def insert_contact(tenant_id, party_id, name, title=None, email=None, phone=None, division=None):
+    return _one(
+        """INSERT INTO app.party_contacts (id, tenant_id, party_id, name, title, email, phone, division)
+           VALUES (%s::uuid, %s::uuid, %s::uuid, %s, %s, %s, %s, %s) RETURNING id""",
+        [str(uuid.uuid4()), tenant_id, str(party_id), name, title or None, email or None, phone or None, division or None])

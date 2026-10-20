@@ -21,7 +21,7 @@ export PGUSER="${PGUSER:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MIGRATIONS=("$HERE/../migrations/0001_init.sql" "$HERE/../migrations/0002_fulfillment_and_sources.sql" "$HERE/../migrations/0003_acks_and_previews.sql")
+MIGRATIONS=("$HERE/../migrations/0001_init.sql" "$HERE/../migrations/0002_fulfillment_and_sources.sql" "$HERE/../migrations/0003_acks_and_previews.sql" "$HERE/../migrations/0004_contacts_and_order_type.sql")
 SUITE="$HERE/rls_tests.sql"
 LOG="${RLS_TEST_LOG:-$(mktemp -t rls_tests.XXXXXX.log)}"
 

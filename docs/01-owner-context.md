@@ -194,3 +194,10 @@ His feedback, all design, all acted on the same day:
 - **The people, by name:** Ashley Schena, Ross Culliton, Chuck Culliton (president and owner),
   Tammy Smith, Eric Wold. Logins stay as first names; full names show in the top bar, on quotes
   and wherever a person is named. The sample data's "Tammie" and "Zach" were placeholders.
+- **Same day, after Ross's note on companies and contacts:** the quote form is now Company (the list,
+  "+ New company") and Contact (the people at that company, tick one or several, "+ New contact" with
+  title, email, phone). Contacts live in `app.party_contacts` (migration 0004) with a free-text
+  division for now. Every quote carries an **order type** (Custom, OTR Machine, Parts, Materials,
+  Accessories, Software, Service/Maintenance, Repairs, Misc), required; `app.purchase_orders.order_type`
+  is ready for when a quote starts a folder. Open: whether divisions are tags or their own companies,
+  and who owns the lists. Questions for the office meeting: `docs/10-meeting-questions-2026-10-20.md`.

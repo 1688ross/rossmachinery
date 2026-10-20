@@ -61,7 +61,7 @@
     }, margin: [0, 20, 0, 20] };
   }
   function docDefinition(q, rows, total){
-    var toLines = [q.to_name, q.to_company, q.to_address].filter(Boolean).join('\n');
+    var toLines = ((q.to_names && q.to_names.length) ? q.to_names : [q.to_name]).concat([q.to_company, q.to_address]).filter(Boolean).join('\n');
     var content = [
       { columns: [{ width: 195, image: LOGO }, { width: '*', text: '212 North Plains Industrial Rd., Wallingford, CT 06492\nTel (203) 269-2950 · Fax (203) 269-2962\nwww.rossmachinery.com', alignment: 'right', fontSize: 9, color: C.ink2, lineHeight: 1.45, margin: [0, 10, 0, 0] }], columnGap: 20 },
       { canvas: [{ type: 'rect', x: 0, y: 0, w: CW, h: 2.25, color: C.yellow }], margin: [0, 12, 0, 24] },

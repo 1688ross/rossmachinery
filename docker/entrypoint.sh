@@ -55,6 +55,8 @@ if [ "${RMS_SEED_DEMO:-0}" = "1" ]; then seed fixtures/seed_dev.sql; fi
 apply schema/migrations/0002_fulfillment_and_sources.sql
 if [ "${RMS_SEED_DEMO:-0}" = "1" ]; then seed fixtures/seed_dev_0002.sql; fi
 apply schema/migrations/0003_acks_and_previews.sql
+apply schema/migrations/0004_contacts_and_order_type.sql
+if [ "${RMS_SEED_DEMO:-0}" = "1" ]; then seed fixtures/seed_dev_0004.sql; fi
 
 echo "== django tables"
 python manage.py migrate --noinput

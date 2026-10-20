@@ -151,6 +151,15 @@ a.sq:hover{outline:2px solid var(--rms-blue);outline-offset:1px}
 .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3) var(--space-4)}
 .f-grid label{display:block;font:var(--type-caption);font-weight:600;color:var(--text-strong);text-transform:uppercase;letter-spacing:.06em}
 .f-grid .span2{grid-column:span 2}
+.f-grid .f-label{display:block;font:var(--type-caption);font-weight:600;color:var(--text-strong);text-transform:uppercase;letter-spacing:.06em}
+.contact-list{display:flex;flex-direction:column;gap:2px;margin:6px 0 4px}
+.contact-list .contact{display:grid;grid-template-columns:auto auto 1fr;gap:2px 8px;align-items:baseline;margin:0;padding:3px 0}
+.contact-list .contact .nm{white-space:nowrap;font-weight:500}
+.contact-list .contact input{margin:0;align-self:center}
+.nc-row{display:grid;grid-template-columns:1.4fr 1fr 1.4fr .9fr 28px;gap:8px;align-items:center;margin:6px 0}
+.nc-row input{margin:0;padding:6px 8px;font:var(--type-body-sm)}
+.nc-row .x{border:0;background:transparent;font-size:18px;color:var(--text-muted);cursor:pointer}
+.btn-sm{padding:4px 10px;font:var(--type-caption);font-weight:600;margin-top:4px}
 .f-grid input,.f-grid textarea,.qlines input,.qlines textarea{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border-default);border-radius:var(--radius-md);font:var(--type-body);box-sizing:border-box;background:#fff}
 .qlines textarea{margin-top:6px;font:var(--type-body-sm)}
 .qlines td{vertical-align:top}

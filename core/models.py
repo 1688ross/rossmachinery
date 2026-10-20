@@ -36,6 +36,33 @@ class Party(models.Model):
         db_table = 'app"."parties'
 
 
+class Contact(models.Model):
+    """A person at a company (migration 0004). Picked on quotes so names, emails and phones are
+    never retyped."""
+    id = models.UUIDField(primary_key=True)
+    tenant_id = models.UUIDField()
+    party_id = models.UUIDField()
+    name = models.TextField()
+    title = models.TextField(null=True)
+    email = models.TextField(null=True)
+    phone = models.TextField(null=True)
+    division = models.TextField(null=True)
+    notes = models.TextField(null=True)
+    is_active = models.BooleanField()
+    created_by = models.UUIDField(null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'app"."party_contacts'
+
+    @property
+    def line(self):
+        """How the person is written on a document: 'Dana Whitfield, Purchasing Manager'."""
+        return f"{self.name}, {self.title}" if self.title else self.name
+
+
 class Folder(models.Model):
     """One row per PO from the app.po_folder view: tab + top sheet + counts."""
     po_id = models.UUIDField(primary_key=True)
